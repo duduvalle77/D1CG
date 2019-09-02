@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <ctime>
-
+#include <iostream>
 #include "extras.h"
-
-#define NUMPRISMAS 4
-
+#define NUMPRISMAS 10
+#include <ctime>
+#include <vector>
+#include <algorithm>
+using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
 class vertice
@@ -25,28 +26,18 @@ class triangle
 
 /// Globals
 float zdist = 8.0;
-float rotationX = 0.0, rotationY = 0.0;
+float rotationX = 0.0, rotationY = 0.0, direction = 0.0;
 int   last_x, last_y;
 int   width, height;
+float sphereX = 0, sphereY = -9.5, velX = 0, velY = 0, velInicial = 0.5;
+float desiredFPS = 30;
+bool launched = false , projection = true, colide = false;
+float dx, dy;
 float x = 1.0, y = 1.0, z = 1.0;
-/*vertice vBase[3] = {{1.0, 1.0, 0.0},
-                    {2.0, 1.0, 0.0},
-                    {1.0, 2.0, 0.0}};
-vertice vBase1[3] = {{3.0, 3.0, 0.0},
-                    {4.0, 3.0, 0.0},
-                    {3.0, 4.0, 0.0}};
-vertice vTopo[3] = {{1.0, 1.0, 1.0},
-                    {2.0, 1.0, 1.0},
-                    {1.0, 2.0, 1.0}};
-vertice vTopo1[3] = {{3.0, 3.0, 1.0},
-                    {4.0, 3.0, 1.0},
-                    {3.0, 4.0, 1.0}};*/
-
+float timet = 0;
 vertice vBases[NUMPRISMAS][3] = {0};
 vertice vTopos[NUMPRISMAS][3] = {0};
 vertice centros[NUMPRISMAS] = {0};
-
-
 /// Functions
 void init(void)
 {
@@ -121,7 +112,7 @@ void CalculaNormal(triangle t, vertice *vn)
 
 void drawObject(vertice vBase[], vertice vTopo[])
 {
-    vertice vetorNormal;
+   vertice vetorNormal;
 
 
     vertice Lado1[4] = {vBase[0],
@@ -181,21 +172,9 @@ void drawObject(vertice vBase[], vertice vTopo[])
     glEnd();
 }
 
-void display(void)
+void drawEnviroment(void)
 {
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    gluLookAt (0.0, -18.0, zdist, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-
-    glPushMatrix();
-     // Função extra para tratar iluminação.
-    setColorBase();
-        glRotatef( rotationY, 0.0, 1.0, 0.0 );
-        glRotatef( rotationX, 1.0, 0.0, 0.0 );
-        glBegin(GL_POLYGON);
+        glBegin(GL_TRIANGLE_FAN);
             glNormal3f(0,0,1);
             glVertex3f(10,10,0);
             glVertex3f(-10,10,0);
@@ -203,7 +182,7 @@ void display(void)
             glVertex3f(10,-10,0);
         glEnd();
 
-        glBegin(GL_POLYGON);
+        glBegin(GL_TRIANGLE_FAN);
             glNormal3f(-1,0,0);
             glVertex3f(10,10,0);
             glVertex3f(10,-10,0);
@@ -211,7 +190,7 @@ void display(void)
             glVertex3f(10,10,1);
         glEnd();
 
-        glBegin(GL_POLYGON);
+        glBegin(GL_TRIANGLE_FAN);
             glNormal3f(0,-1,0);
             glVertex3f(10,10,0);
             glVertex3f(10,10,1);
@@ -219,7 +198,7 @@ void display(void)
             glVertex3f(-10,10,0);
         glEnd();
 
-        glBegin(GL_POLYGON);
+        glBegin(GL_TRIANGLE_FAN);
             glNormal3f(1,0,0);
             glVertex3f(-10,10,0);
             glVertex3f(-10,10,1);
@@ -227,24 +206,253 @@ void display(void)
             glVertex3f(-10,-10,0);
         glEnd();
 
-        glBegin(GL_POLYGON);
+        glBegin(GL_TRIANGLE_FAN);
             glNormal3f(0,1,0);
             glVertex3f(10,-10,0);
             glVertex3f(-10,-10,0);
             glVertex3f(-10,-10,1);
             glVertex3f(10,-10,1);
         glEnd();
-    setColor(1.0,0.0,0.0);
-    for (int i = 0; i < NUMPRISMAS; i++)
-        drawObject(vBases[i], vTopos[i]);
+}
+void display(void)
+{
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
+
+    int ortho = 10;
+    if(!projection)
+    {
+        if (width <= height)
+            glOrtho (-ortho, ortho, -ortho*height/width, ortho*height/width, -100.0, 100.0);
+        else
+            glOrtho (-ortho*width/height, ortho*width/height, -ortho, ortho, -100.0, 100.0);
+    }
+    else
+        gluPerspective(60.0, (GLfloat) width/(GLfloat) height, 0.01, 200.0);
+
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    if(!projection)
+        gluLookAt (0.0, 0.0, zdist, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    else
+        gluLookAt (0.0, -18.0, zdist, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+    float corDisparador = (3-velInicial)/5;
+
+    glPushMatrix();
+        glRotatef( rotationY, 0.0, 1.0, 0.0 );
+        glRotatef( rotationX, 1.0, 0.0, 0.0 );
+        setColor(1.0,0.0,0.0);
+        for (int i = 0; i < NUMPRISMAS; i++)
+            drawObject(vBases[i], vTopos[i]);
+        setColorBase();
+        drawEnviroment();
+        glPushMatrix();
+            setColor(0,1,0);
+            glTranslatef(sphereX,sphereY,0.5);
+            glutSolidSphere(0.5,100,100);
+        if(!launched){
+                glRotatef(direction,0,0,1);
+                setColor(1,corDisparador,0);
+                glTranslatef(0,1.75,0);
+                glBegin(GL_TRIANGLE_FAN);
+                    glNormal3f(0,0,1);
+                    glVertex3f(0.5,1.75,0);
+                    glVertex3f(-0.5,1.75,0);
+                    glVertex3f(-0.5,-1.75,0);
+                    glVertex3f(0.5,-1.75,0);
+                glEnd();
+                glTranslatef(0,2.4,0);
+                glBegin(GL_TRIANGLES);
+                    glNormal3f(0,0,1);
+                    glVertex3f(0.75,-0.65,0);
+                    glVertex3f(0,0.65,0);
+                    glVertex3f(-0.75,-0.65,0);
+                glEnd();
+        }
+        glPopMatrix();
     glPopMatrix();
 
     glutSwapBuffers();
 }
 
+void calculaVetorNovo(float nx, float ny)
+{
+    float len_v = sqrt(nx*nx + ny*ny);
+    nx /= len_v;
+    ny /= len_v;
+    float aux = 2*(-dx*nx + -dy*ny);
+    dx = nx*aux + dx;
+    dy = ny*aux + dy;
+}
+
+void colisionAmbient()
+{
+    if(sphereX > 9.5)
+    {
+        sphereX = 9.5;
+        calculaVetorNovo(-1,0);
+    }
+    if(sphereX < -9.5)
+    {
+        sphereX = -9.5;
+        calculaVetorNovo(1,0);
+    }
+    if(sphereY > 9.5)
+    {
+        sphereY = 9.5;
+        calculaVetorNovo(0,1);
+    }
+    if(sphereY < -9.5)
+    {
+        sphereY = -9.5;
+        calculaVetorNovo(0,-1);
+    }
+}
+
+float distanceSphereToSomething (vertice ponto)
+{
+    float aux = pow(sphereX - ponto.x,2) + pow(sphereY - ponto.y,2);
+    return sqrt(aux);
+}
+
+float distance2vertices (vertice ponto1, vertice ponto2)
+{
+    float aux = pow(ponto2.x - ponto1.x,2) + pow(ponto2.y - ponto1.y,2);
+    return sqrt(aux);
+}
+
+bool inRange (vertice ponto1,vertice ponto2) {
+    double dx = ponto1.x - ponto2.x;
+    double dy = ponto1.y - ponto2.y;
+    double innerProduct = (sphereX - ponto2.x)*dx + (sphereY - ponto2.y)*dy;
+    return 0 <= innerProduct && innerProduct <= dx*dx + dy*dy;
+}
+
+bool colisionSphereLine(vertice ponto1,vertice ponto2)
+{
+    bool colidiu = false;
+    float aux = fabs((ponto2.y-ponto1.y)*sphereX - (ponto2.x-ponto1.x)*sphereY + ponto2.x*ponto1.y - ponto2.y*ponto1.x);
+    if(aux/distance2vertices(ponto1,ponto2) <= 0.5)
+    {
+        colidiu = !colidiu;
+        //cout << aux/distance2vertices(ponto1,ponto2) << endl;
+    }
+    return colidiu ;
+}
+
+void colision()
+{
+    float nx, ny;
+    for(int i = 0; i < NUMPRISMAS; i++)
+    {
+        vector< pair <float,int> > vect;// par indice de vertice
+        if(distanceSphereToSomething(centros[i]) < 3.5)
+        {
+            for(int j = 0; j < 3; j++)
+            {
+                vect.push_back( make_pair(distanceSphereToSomething(vBases[i][j]),j) );
+            }
+            sort(vect.begin(), vect.end());
+
+            if(inRange(vBases[i][vect[0].second],vBases[i][vect[1].second]))
+            {
+                if(colisionSphereLine(vBases[i][vect[0].second],vBases[i][vect[1].second]))
+                {
+                    float ny = -(vBases[i][vect[0].second].x - vBases[i][vect[1].second].x);
+                    float nx = vBases[i][vect[0].second].y - vBases[i][vect[1].second].y;
+                    vertice auxV1 = {nx+vBases[i][vect[0].second].x,ny+vBases[i][vect[0].second].y,0};
+                    vertice auxV2 = {-(nx+vBases[i][vect[0].second].x),-(ny+vBases[i][vect[0].second].y),0};
+                    if(distance2vertices(auxV1,centros[i]) < distance2vertices(auxV2,centros[i]))
+                    {
+                        nx *= -1;
+                        ny *= -1;
+                    }
+                    calculaVetorNovo(nx,ny);
+                    colide = true;
+                    timet = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+                    break;
+                }
+            }
+            else if(inRange(vBases[i][vect[0].second],vBases[i][vect[2].second]))
+            {
+                if(colisionSphereLine(vBases[i][vect[0].second],vBases[i][vect[2].second]))
+                {
+                    float ny = -(vBases[i][vect[0].second].x - vBases[i][vect[2].second].x);
+                    float nx = vBases[i][vect[0].second].y - vBases[i][vect[2].second].y;
+                    vertice auxV1 = {nx+vBases[i][vect[0].second].x,ny+vBases[i][vect[0].second].y,0};
+                    vertice auxV2 = {-(nx+vBases[i][vect[0].second].x),-(ny+vBases[i][vect[0].second].y),0};
+                    if(distance2vertices(auxV1,centros[i]) < distance2vertices(auxV2,centros[i]))
+                    {
+                        nx *= -1;
+                        ny *= -1;
+                    }
+                    calculaVetorNovo(nx,ny);
+                    colide = true;
+                    timet = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+                    break;
+                }
+            }
+            else if(vect[0].first <= 0.5)
+            {
+                calculaVetorNovo(sphereX-vBases[i][vect[0].second].x,sphereY-vBases[i][vect[0].second].y);
+                colide = true;
+                timet = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+                break;
+            }
+        }
+    }
+}
+
 void idle ()
 {
+    float t, desiredFrameTime, frameTime;
+    static float tLast = 0.0;
+    // Get elapsed time
+    t = glutGet(GLUT_ELAPSED_TIME);
+    // convert milliseconds to seconds
+    t /= 1000.0;
+
+    // Calculate frame time
+    frameTime = t - tLast;
+    // Calculate desired frame time
+    desiredFrameTime = 1.0 / (float) (desiredFPS);
+
+    // Check if the desired frame time was achieved. If not, skip animation.
+    if( frameTime <= desiredFrameTime)
+        return;
+
+    colisionAmbient();
+    if(colide)
+    {
+        if(t-timet > 0.09)
+            colide = false;
+    }
+    else
+    {
+       colision();
+    }
+
+    float step = 1;
+    if(launched)
+    {
+        velX = dx*velInicial*2;
+        velY = dy*velInicial*2;
+        sphereX+=velX* (step / desiredFPS);
+        sphereY+=velY* (step / desiredFPS);
+    }
+    else
+    {
+        dx = cos((direction+90)*0.0174533);
+        dy = sin((direction+90)*0.0174533);
+        sphereX = 0;
+        sphereY = -9.5;
+    }
+
+    tLast = t;
     glutPostRedisplay();
 }
 
@@ -254,12 +462,9 @@ void reshape (int w, int h)
     height = h;
 
     glViewport (0, 0, (GLsizei) w, (GLsizei) h);
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
-    gluPerspective(60.0, (GLfloat) w/(GLfloat) h, 0.01, 200.0);
 }
 
-void keyboard (unsigned char key, int x1, int y)
+void keyboard (unsigned char key, int x, int y)
 {
 
     switch (tolower(key))
@@ -267,9 +472,35 @@ void keyboard (unsigned char key, int x1, int y)
         case 27:
             exit(0);
             break;
+        case 'w':
+            if(!launched && velInicial < 2.5)
+            {
+                velInicial +=0.5;
+            }
+            break;
+        case 's':
+            if(!launched && velInicial > 0.5)
+            {
+                velInicial -=0.5;
+            }
+            break;
+        case 'd':
+            if(!launched && direction > -75)
+            {
+                direction -=1;
+            }
+            break;
         case 'a':
-//            x ++;
-//            printf("%f",x);
+            if(!launched && direction < 75)
+            {
+                direction +=1;
+            }
+            break;
+        case 32:
+            launched = !launched;
+            break;
+        case 'p':
+            projection = !projection;
             break;
     }
 }
