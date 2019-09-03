@@ -4,10 +4,11 @@
 #include <ctype.h>
 #include <math.h>
 #include "extras.h"
-#define NUMPRISMAS 4
+#define NUMPRISMAS 8
 #include <ctime>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
@@ -44,6 +45,7 @@ float raioAreaImpacto = 5; //variavel que determina a distancia minima para veri
 
 //variaveis utilizadas para definir a posição dos prismas
 float x = 1.0, y = 1.0;
+float tamPrisma = 1.5;
 vertice vBases[NUMPRISMAS][3] = {0};
 vertice vTopos[NUMPRISMAS][3] = {0};
 vertice centros[NUMPRISMAS] = {0};
@@ -55,24 +57,55 @@ void init(void)
     initLight(width, height);
     for (int i = 0; i < NUMPRISMAS; i ++)
     {
-        int r = rand() % 2;
+        int r = rand() % 2; // r e ry servem para decidir se o prima tera sua posição em x e y invertida
         int ry = rand() % 2;
-        int rot = rand() % 10;
-        int xrot = 0;
-        x = rand() % 9;
+        int rot = rand() % 10; // rot serve para decidir se o prisma vai ser rotacionado
+        int angle = rand() % 90; // Gera um ângulo aletório entre 0 e 88 graus para a rotação
+        x = rand() % 7; // 7 foi usado para impedir o prisma qualquer vértice do prisma fique fora do tabuleiro
         if (r==0)
             x = x * -1;
-        y = rand() % 9;
+        y = rand() % 7;
         if (ry==0)
             y = y * -1;
         if (rot % 2)
-            xrot = 1;
-        vBases[i][0] = {x,y,0.0};
-        vBases[i][1] = {1.0+x-xrot,y-xrot,0.0};
-        vBases[i][2] = {x-xrot,1.0+y-xrot,0.0};
-        vTopos[i][0] = {x,y,1.0};
-        vTopos[i][1] = {1.0+x-xrot,y-xrot,1.0};
-        vTopos[i][2] = {x-xrot,1.0+y-xrot,1.0};
+        {
+            float xaux[3] = {0}; // vetores que guardam as mudanças de posição usadas na rotação
+            float yaux[3] = {0};
+
+            /// Cálculo da rotação em Z para cada vértice
+            xaux[0] = x*cos(angle*0.0174533) - y*sin(angle*0.0174533);
+            yaux[0] = x*sin(angle*0.0174533) + y*cos(angle*0.0174533);
+
+            xaux[1] = (x+tamPrisma)*cos(angle*0.0174533) - y*sin(angle*0.0174533);
+            yaux[1] = (x+tamPrisma)*sin(angle*0.0174533) + y*cos(angle*0.0174533);
+
+            xaux[2] = x*cos(angle*0.0174533) - (y+tamPrisma)*sin(angle*0.0174533);
+            yaux[2] = x*sin(angle*0.0174533) + (y+tamPrisma)*cos(angle*0.0174533);
+
+            vBases[i][0] = {xaux[0],yaux[0],0.0};
+            vBases[i][1] = {xaux[1],yaux[1],0.0};
+            vBases[i][2] = {xaux[2],yaux[2],0.0};
+
+            /// Os vértices a seguir mudam apenas em altura, para fazer o topo do triângulo
+            vTopos[i][0] = {xaux[0],yaux[0],1.0};
+            vTopos[i][1] = {xaux[1],yaux[1],1.0};
+            vTopos[i][2] = {xaux[2],yaux[2],1.0};
+
+
+        }
+        else
+        {
+            vBases[i][0] = {x,y,0.0};
+            vBases[i][1] = {tamPrisma+x,y,0.0};
+            vBases[i][2] = {x,tamPrisma+y,0.0};
+
+            /// Os vértices a seguir mudam apenas em altura, para fazer o topo do triângulo
+            vTopos[i][0] = {x,y,1.0};
+            vTopos[i][1] = {tamPrisma+x,y,1.0};
+            vTopos[i][2] = {x,tamPrisma+y,1.0};
+        }
+
+        /// Cálculo do centro do prisma
         float xCentro = (vBases[i][0].x + vBases[i][1].x + vBases[i][2].x)/3;
         float yCentro = (vBases[i][0].y + vBases[i][1].y + vBases[i][2].y)/3;
         centros[i] = {xCentro, yCentro, 0.0};
@@ -124,7 +157,7 @@ void drawObject(vertice vBase[], vertice vTopo[])
 {
    vertice vetorNormal;
 
-
+    /// Os vetores abaixo são os 4 vértices necessários para delimitar cada lado do prisma
     vertice Lado1[4] = {vBase[0],
                         vBase[1],
                         vTopo[1],
@@ -138,45 +171,46 @@ void drawObject(vertice vBase[], vertice vTopo[])
                         vTopo[1],
                         vBase[1]};
 
+    /// O vetor a seguir armazena os vértices dos triângulos que iram compor a base e o topo dos prismas
     triangle t[2] = {{vBase[0], vBase[1], vBase[2]},
                      {vTopo[0], vTopo[1], vTopo[2]}};
 
+    /// Os proximos triângulos serão as bases para os lados
     triangle t1 = {Lado1[0], Lado1[1], Lado1[2]};
     triangle t2 = {Lado2[0], Lado2[1], Lado2[2]};
     triangle t3 = {Lado3[0], Lado3[1], Lado3[2]};
 
 
     glBegin(GL_TRIANGLES);
-        for(int i = 0; i < 2; i++) // triangulos
+        for(int i = 0; i < 2; i++) // Triangulos da base e do topo
         {
             CalculaNormal(t[i], &vetorNormal); // Passa face triangular e endereço do vetor normal de saída
             glNormal3f(vetorNormal.x, vetorNormal.y,vetorNormal.z);
-            for(int j = 0; j < 3; j++) // vertices do triangulo
+            for(int j = 0; j < 3; j++) // Vertices do triangulo
                 glVertex3f(t[i].v[j].x, t[i].v[j].y, t[i].v[j].z);
         }
     glEnd();
 
     glBegin(GL_TRIANGLE_FAN);
-        CalculaNormal(t1, &vetorNormal); // Passa face triangular e endereço do vetor normal de saída
+        CalculaNormal(t1, &vetorNormal);
         glNormal3f(vetorNormal.x, vetorNormal.y,vetorNormal.z);
-
-        for(int j = 0; j < 3; j++) // vertices do triangulo
+        for(int j = 0; j < 3; j++)
             glVertex3f(t1.v[j].x, t1.v[j].y, t1.v[j].z);
-        glVertex3f(Lado1[3].x, Lado1[3].y, Lado1[3].z);
+        glVertex3f(Lado1[3].x, Lado1[3].y, Lado1[3].z); // Esse último vértice é adicionado para formar o lado
     glEnd();
 
     glBegin(GL_TRIANGLE_FAN);
-        CalculaNormal(t2, &vetorNormal); // Passa face triangular e endereço do vetor normal de saída
+        CalculaNormal(t2, &vetorNormal);
         glNormal3f(vetorNormal.x, vetorNormal.y,vetorNormal.z);
-        for(int j = 0; j < 3; j++) // vertices do triangulo
+        for(int j = 0; j < 3; j++)
             glVertex3f(t2.v[j].x, t2.v[j].y, t2.v[j].z);
         glVertex3f(Lado2[3].x, Lado2[3].y, Lado2[3].z);
     glEnd();
 
     glBegin(GL_TRIANGLE_FAN);
-        CalculaNormal(t3, &vetorNormal); // Passa face triangular e endereço do vetor normal de saída
+        CalculaNormal(t3, &vetorNormal);
         glNormal3f(vetorNormal.x, vetorNormal.y,vetorNormal.z);
-        for(int j = 0; j < 3; j++) // vertices do triangulo
+        for(int j = 0; j < 3; j++)
             glVertex3f(t3.v[j].x, t3.v[j].y, t3.v[j].z);
         glVertex3f(Lado3[3].x, Lado3[3].y, Lado3[3].z);
     glEnd();
