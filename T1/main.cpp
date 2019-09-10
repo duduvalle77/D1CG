@@ -9,14 +9,12 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include "include/faseSelector.h"
+#include <iostream>
 using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
-class vertice
-{
-    public:
-        float x,y,z;
-};
+
 
 /// Globals
 //variaveis presentes no codigo original
@@ -45,6 +43,10 @@ void init(void)
 {
     srand(time(NULL));
     initLight(width, height);
+    tijolo t = tijolo();
+    cout << t.alive << "\t";
+    t.setVertice(10,20);
+    cout << t.alive << endl;
 }
 
 // Função para desenhar as paredes e a superficie
