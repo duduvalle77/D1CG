@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include "src/extras.h"
-#define NUMPRISMAS 8
+#include "../../src/extras.h"
 #include <ctime>
 #include <vector>
 #include <algorithm>
 #include <cmath>
 #include "include/faseSelector.h"
 #include <iostream>
+
 using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
@@ -38,16 +38,99 @@ float raioAreaImpacto = 5; //variavel que determina a distancia minima para veri
 //variaveis utilizadas para definir a posição dos prismas
 float x = 1.0, y = 1.0;
 
+
+
+faseSelector fs;
+
 /// Functions
 void init(void)
 {
     srand(time(NULL));
     initLight(width, height);
-    tijolo t = tijolo();
-    cout << t.alive << "\t";
-    t.setVertice(10,20);
-    cout << t.alive << endl;
+    fs.construirGrid();
 }
+
+void drawBrick(float x, float y)
+{
+    vertice vBase[4] = {{x,y,0},
+                        {x+comprimento,y,0},
+                        {x+comprimento,y+largura,0},
+                        {x,y+largura,0}};
+
+    vertice vTopo[4] = {{x,y,altura},
+                        {x+comprimento,y,altura},
+                        {x+comprimento,y+largura,altura},
+                        {x,y+largura,altura}};
+
+    vertice frente[4] = {vBase[0],
+                         vBase[1],
+                         vTopo[1],
+                         vTopo[0]};
+
+    vertice direito[4] = {vBase[1],
+                          vBase[2],
+                          vTopo[2],
+                          vTopo[1]};
+
+    vertice costas[4] = {vBase[2],
+                         vBase[3],
+                         vTopo[3],
+                         vTopo[2]};
+
+    vertice esquerdo[4] = {vBase[3],
+                           vBase[0],
+                           vTopo[0],
+                           vTopo[3]};
+
+    ///Base
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
+        glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
+        glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
+        glVertex3f(vBase[3].x, vBase[3].y, vBase[3].z);
+    glEnd();
+
+    ///Topo
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
+        glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
+        glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
+        glVertex3f(vTopo[3].x, vTopo[3].y, vTopo[3].z);
+    glEnd();
+
+    ///Frente
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(frente[0].x, frente[0].y, frente[0].z);
+        glVertex3f(frente[1].x, frente[1].y, frente[1].z);
+        glVertex3f(frente[2].x, frente[2].y, frente[2].z);
+        glVertex3f(frente[3].x, frente[3].y, frente[3].z);
+    glEnd();
+
+    ///Direita
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(direito[0].x, direito[0].y, direito[0].z);
+        glVertex3f(direito[1].x, direito[1].y, direito[1].z);
+        glVertex3f(direito[2].x, direito[2].y, direito[2].z);
+        glVertex3f(direito[3].x, direito[3].y, direito[3].z);
+    glEnd();
+
+    ///Costas
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(costas[0].x, costas[0].y, costas[0].z);
+        glVertex3f(costas[1].x, costas[1].y, costas[1].z);
+        glVertex3f(costas[2].x, costas[2].y, costas[2].z);
+        glVertex3f(costas[3].x, costas[3].y, costas[3].z);
+    glEnd();
+
+    ///Esquerda
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
+        glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
+        glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
+        glVertex3f(esquerdo[3].x, esquerdo[3].y, esquerdo[3].z);
+    glEnd();
+}
+
 
 // Função para desenhar as paredes e a superficie
 void drawEnviroment(void)
@@ -129,6 +212,13 @@ void display(void)
         glRotatef( rotationY, 0.0, 1.0, 0.0 );
         glRotatef( rotationX, 1.0, 0.0, 0.0 );
         setColor(1.0,0.0,0.0);
+        for(int i = 0; i < matrizLinha; i++)
+        {
+            for(int j = 0; j < matrizColuna; j++)
+            {
+                drawBrick(fs.m[i][j].vMenor.x, fs.m[i][j].vMenor.y);
+            }
+        }
    //     for (int i = 0; i < NUMPRISMAS; i++)
    //         drawObject(vBases[i], vTopos[i]);
         setColorBase();
