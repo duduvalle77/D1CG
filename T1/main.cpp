@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include "../src/D1/extras.h"
+#include "../src/extras.h"
 #include <ctime>
 #include <vector>
 #include <algorithm>
@@ -36,11 +36,20 @@ float raioAreaImpacto = 5; //variavel que determina a distancia minima para veri
 //variaveis utilizadas para definir a posição dos prismas
 float x = 1.0, y = 1.0;
 faseSelector fs;
+float mColor[matrizLinha][3];
 /// Functions
 void init(void)
 {
+    srand(time(0));
     initLight(width, height);
     fs.construirGrid();
+    for (int i = 0; i < matrizLinha; i++)
+    {
+        mColor[i][0] = float((rand() % 10)) / 9.0;
+        mColor[i][1] = float((rand() % 10)) / 9.0;
+        mColor[i][2] = float((rand() % 10)) / 9.0;
+    }
+
 }
 
 // Função para desenhar as paredes e a superficie
@@ -290,6 +299,7 @@ void display(void)
     glPushMatrix();
         for(int i = 0; i < matrizLinha; i++)
         {
+            setColor(mColor[i][0], mColor[i][1], mColor[i][2]);
             for(int j = 0; j < matrizColuna; j++)
             {
                 if(fs.m[i][j].alive)
