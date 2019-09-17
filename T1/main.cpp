@@ -3,14 +3,13 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include "../../src/extras.h"
+#include "../src/D1/extras.h"
 #include <ctime>
 #include <vector>
 #include <algorithm>
 #include <cmath>
 #include "include/faseSelector.h"
 #include <iostream>
-
 using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
@@ -22,32 +21,62 @@ float zdist = 8.0;
 float rotationX = 0.0, rotationY = 0.0;
 int   last_x, last_y;
 int   width, height;
-
+float barraH = 1, barraW = 4.0;
+float barraX = 0.0, barraY = -10+barraH*1.5;
 float desiredFPS = 60; //define fps do deslocamento da esfera
 float direction = 0.0;//direção do disparador em angulos
 float sphereX = 0, sphereY = -9.5; //variavel que determinam a posição da esfera
-float velX = 0, velY = 0, velInicial = 0.5; //variavel que determinam a velocidade da esfera
+float velX = 0, velY = 0, velInicial = 7.5; //variavel que determinam a velocidade da esfera
+float velMouse = 0.25;
 bool launched = false; //variavel que determina se a esfera foi lançada
 bool projection = true; //variavel que determina que tipo de projeção utilizar
-bool colide = false; //variavel que determina se a esfera colidiu com algum prisma
 float dx, dy; //valores de x e y do vetor direção normalizados
-float timet = 0; //variavel que guarda o ultimo instante em que ocorreu colisçao da esfera com um prisma
-float intensidade = 2; //variavel para determinar intensidade da velocidade
 float raioAreaImpacto = 5; //variavel que determina a distancia minima para verificar a possibilidade de colisão da esfera com um prisma
 
 //variaveis utilizadas para definir a posição dos prismas
 float x = 1.0, y = 1.0;
-
-
-
 faseSelector fs;
-
 /// Functions
 void init(void)
 {
-    srand(time(NULL));
     initLight(width, height);
     fs.construirGrid();
+}
+
+// Função para desenhar as paredes e a superficie
+void drawEnviroment(void)
+{
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0,0,1);
+            glVertex3f(10,10,0);
+            glVertex3f(-10,10,0);
+            glVertex3f(-10,-10,0);
+            glVertex3f(10,-10,0);
+        glEnd();
+
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(-1,0,0);
+            glVertex3f(10,10,0);
+            glVertex3f(10,-10,0);
+            glVertex3f(10,-10,1);
+            glVertex3f(10,10,1);
+        glEnd();
+
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0,-1,0);
+            glVertex3f(10,10,0);
+            glVertex3f(10,10,1);
+            glVertex3f(-10,10,1);
+            glVertex3f(-10,10,0);
+        glEnd();
+
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(1,0,0);
+            glVertex3f(-10,10,0);
+            glVertex3f(-10,10,1);
+            glVertex3f(-10,-10,1);
+            glVertex3f(-10,-10,0);
+        glEnd();
 }
 
 void drawBrick(float x, float y)
@@ -84,6 +113,7 @@ void drawBrick(float x, float y)
 
     ///Base
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,0,-1);
         glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
         glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
         glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
@@ -92,6 +122,7 @@ void drawBrick(float x, float y)
 
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,0,1);
         glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
         glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
         glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
@@ -100,6 +131,7 @@ void drawBrick(float x, float y)
 
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,-1,0);
         glVertex3f(frente[0].x, frente[0].y, frente[0].z);
         glVertex3f(frente[1].x, frente[1].y, frente[1].z);
         glVertex3f(frente[2].x, frente[2].y, frente[2].z);
@@ -108,6 +140,7 @@ void drawBrick(float x, float y)
 
     ///Direita
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(1,0,0);
         glVertex3f(direito[0].x, direito[0].y, direito[0].z);
         glVertex3f(direito[1].x, direito[1].y, direito[1].z);
         glVertex3f(direito[2].x, direito[2].y, direito[2].z);
@@ -116,6 +149,7 @@ void drawBrick(float x, float y)
 
     ///Costas
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,1,0);
         glVertex3f(costas[0].x, costas[0].y, costas[0].z);
         glVertex3f(costas[1].x, costas[1].y, costas[1].z);
         glVertex3f(costas[2].x, costas[2].y, costas[2].z);
@@ -124,6 +158,7 @@ void drawBrick(float x, float y)
 
     ///Esquerda
     glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(-1,0,0);
         glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
         glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
         glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
@@ -131,49 +166,91 @@ void drawBrick(float x, float y)
     glEnd();
 }
 
-
-// Função para desenhar as paredes e a superficie
-void drawEnviroment(void)
+void desenhaBarra()
 {
-        glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(0,0,1);
-            glVertex3f(10,10,0);
-            glVertex3f(-10,10,0);
-            glVertex3f(-10,-10,0);
-            glVertex3f(10,-10,0);
-        glEnd();
+    vertice vBase[4] = {{barraX-barraW/2,barraY-barraH/2,0},
+                        {barraX+barraW/2,barraY-barraH/2,0},
+                        {barraX+barraW/2,barraY+barraH/2,0},
+                        {barraX-barraW/2,barraY+barraH/2,0}};
 
-        glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(-1,0,0);
-            glVertex3f(10,10,0);
-            glVertex3f(10,-10,0);
-            glVertex3f(10,-10,1);
-            glVertex3f(10,10,1);
-        glEnd();
+    vertice vTopo[4] = {{barraX-barraW/2,barraY-barraH/2,altura},
+                        {barraX+barraW/2,barraY-barraH/2,altura},
+                        {barraX+barraW/2,barraY+barraH/2,altura},
+                        {barraX-barraW/2,barraY+barraH/2,altura}};
 
-        glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(0,-1,0);
-            glVertex3f(10,10,0);
-            glVertex3f(10,10,1);
-            glVertex3f(-10,10,1);
-            glVertex3f(-10,10,0);
-        glEnd();
+    vertice frente[4] = {vBase[0],
+                         vBase[1],
+                         vTopo[1],
+                         vTopo[0]};
 
-        glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(1,0,0);
-            glVertex3f(-10,10,0);
-            glVertex3f(-10,10,1);
-            glVertex3f(-10,-10,1);
-            glVertex3f(-10,-10,0);
-        glEnd();
+    vertice direito[4] = {vBase[1],
+                          vBase[2],
+                          vTopo[2],
+                          vTopo[1]};
 
-        glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(0,1,0);
-            glVertex3f(10,-10,0);
-            glVertex3f(-10,-10,0);
-            glVertex3f(-10,-10,1);
-            glVertex3f(10,-10,1);
-        glEnd();
+    vertice costas[4] = {vBase[2],
+                         vBase[3],
+                         vTopo[3],
+                         vTopo[2]};
+
+    vertice esquerdo[4] = {vBase[3],
+                           vBase[0],
+                           vTopo[0],
+                           vTopo[3]};
+
+    ///Base
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,0,-1);
+        glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
+        glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
+        glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
+        glVertex3f(vBase[3].x, vBase[3].y, vBase[3].z);
+    glEnd();
+
+    ///Topo
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,0,1);
+        glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
+        glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
+        glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
+        glVertex3f(vTopo[3].x, vTopo[3].y, vTopo[3].z);
+    glEnd();
+
+    ///Frente
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,-1,0);
+        glVertex3f(frente[0].x, frente[0].y, frente[0].z);
+        glVertex3f(frente[1].x, frente[1].y, frente[1].z);
+        glVertex3f(frente[2].x, frente[2].y, frente[2].z);
+        glVertex3f(frente[3].x, frente[3].y, frente[3].z);
+    glEnd();
+
+    ///Direita
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(1,0,0);
+        glVertex3f(direito[0].x, direito[0].y, direito[0].z);
+        glVertex3f(direito[1].x, direito[1].y, direito[1].z);
+        glVertex3f(direito[2].x, direito[2].y, direito[2].z);
+        glVertex3f(direito[3].x, direito[3].y, direito[3].z);
+    glEnd();
+
+    ///Costas
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(0,1,0);
+        glVertex3f(costas[0].x, costas[0].y, costas[0].z);
+        glVertex3f(costas[1].x, costas[1].y, costas[1].z);
+        glVertex3f(costas[2].x, costas[2].y, costas[2].z);
+        glVertex3f(costas[3].x, costas[3].y, costas[3].z);
+    glEnd();
+
+    ///Esquerda
+    glBegin(GL_TRIANGLE_FAN);
+        glNormal3f(-1,0,0);
+        glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
+        glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
+        glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
+        glVertex3f(esquerdo[3].x, esquerdo[3].y, esquerdo[3].z);
+    glEnd();
 }
 
 void display(void)
@@ -198,29 +275,30 @@ void display(void)
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
+    glutSetCursor(GLUT_CURSOR_NONE);
     //A variavel projection e utilizada para definir posição da camera
     if(!projection)
         gluLookAt (0.0, 0.0, zdist, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     else
         gluLookAt (0.0, -18.0, zdist, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    //corDisparador define o valor do segundo parametro de setColor do disparador
-    float corDisparador = (3-velInicial)/5;
 
     //chama as funções de desenhar prismas e ambiente, além de desenhar o disparador e a esfera
     glPushMatrix();
-        glRotatef( rotationY, 0.0, 1.0, 0.0 );
-        glRotatef( rotationX, 1.0, 0.0, 0.0 );
-        setColor(1.0,0.0,0.0);
+        setColor(1,0,0);
+        desenhaBarra();
+    glPopMatrix();
+    glPushMatrix();
         for(int i = 0; i < matrizLinha; i++)
         {
             for(int j = 0; j < matrizColuna; j++)
             {
-                drawBrick(fs.m[i][j].vMenor.x, fs.m[i][j].vMenor.y);
+                if(fs.m[i][j].alive)
+                {
+                    drawBrick(fs.m[i][j].vMenor.x, fs.m[i][j].vMenor.y);
+                }
+
             }
         }
-   //     for (int i = 0; i < NUMPRISMAS; i++)
-   //         drawObject(vBases[i], vTopos[i]);
         setColorBase();
         drawEnviroment();
         glPushMatrix();
@@ -229,7 +307,7 @@ void display(void)
             glutSolidSphere(0.5,100,100);
         if(!launched){//verifica se a bola foi lançada para desenhar o disparador
                 glRotatef(direction,0,0,1);
-                setColor(1,corDisparador,0);
+                setColor(1,0,0);
                 glTranslatef(0,1.75,0);
                 glBegin(GL_TRIANGLE_FAN);
                     glNormal3f(0,0,1);
@@ -255,10 +333,7 @@ void display(void)
 // função para calcular novos valores de dx e dy, a partir do vetor normal(nx,ny,0), sendo o vetor normal normalizado dentro da função
 void calculaVetorNovo(float nx, float ny)
 {
-    //parte para normalizar o vetor normal
-    float len_v = sqrt(nx*nx + ny*ny);
-    nx /= len_v;
-    ny /= len_v;
+
     //calcula direção do vetor novo utilizando a lei da reflexão
     float aux = 2*(-dx*nx + -dy*ny);
     dx = nx*aux + dx;
@@ -285,8 +360,250 @@ void colisionAmbient()
     }
     if(sphereY < -9.5)
     {
-        sphereY = -9.5;
-        calculaVetorNovo(0,-1);
+        launched = !launched;
+    }
+}
+
+bool distanciaNormalDirecao(float nx,float ny)
+{
+    float auxX = nx - dx;
+    float auxY = ny - dy;
+    float d = auxX*auxX + auxY*auxY;
+    return d > 2;
+}
+
+void colisaoBarra()
+{
+    if(launched && sphereY < -5)
+    {
+        float len_v = 0;
+        float d = 0, aux = 0;
+        float nx = 0, ny = 0;
+        int xbool = 1, ybool = 1;
+        if (sphereX<barraX-barraW/2)
+        {
+            xbool = 0;
+            aux = sphereX - (barraX-barraW/2);
+            d = d+aux*aux;
+        }
+        else if (sphereX>barraX+barraW/2)
+        {
+            xbool = 2;
+            aux = sphereX - (barraX+barraW/2);
+            d = d+aux*aux;
+        }
+
+        if (sphereY<barraY-barraH/2)
+        {
+            ybool = 0;
+            aux = sphereY - (barraY-barraH/2);
+            d = d+aux*aux;
+        }
+        else if (sphereY>barraY+barraH/2)
+        {
+            ybool = 2;
+            aux = sphereY - (barraY+barraH/2);
+            d = d+aux*aux;
+        }
+
+        if(d <= 0.25)
+        {
+            switch (xbool)
+            {
+                case 0:
+                    switch (ybool)
+                    {
+                        case 0:
+                            nx = sphereX - (barraX-barraW/2);
+                            ny = sphereY - (barraY-barraH/2);
+                            //parte para normalizar o vetor normal
+                            len_v = sqrt(nx*nx + ny*ny);
+                            nx /= len_v;
+                            ny /= len_v;
+                            break;
+                        case 1:
+                            nx = -1;
+                            ny = 0;
+                            break;
+                        case 2:
+                            nx = sphereX - (barraX-barraW/2);
+                            ny = sphereY - (barraY+barraH/2);
+                            //parte para normalizar o vetor normal
+                            len_v = sqrt(nx*nx + ny*ny);
+                            nx /= len_v;
+                            ny /= len_v;
+                            break;
+                    }
+                    break;
+                case 1:
+                    switch (ybool)
+                    {
+                        case 0:
+                            nx = 0;
+                            ny = -1;
+                            break;
+                        case 2:
+                            nx = 0;
+                            ny = 1;
+                            break;
+                    }
+                    break;
+                case 2:
+                    switch (ybool)
+                    {
+                        case 0:
+                            nx = sphereX - (barraX+barraW/2);
+                            ny = sphereY - (barraY-barraH/2);
+                            //parte para normalizar o vetor normal
+                            len_v = sqrt(nx*nx + ny*ny);
+                            nx /= len_v;
+                            ny /= len_v;
+                            break;
+                        case 1:
+                            nx = 1;
+                            ny = 0;
+                            break;
+                        case 2:
+                            nx = sphereX - (barraX+barraW/2);
+                            ny = sphereY - (barraY+barraH/2);
+                            //parte para normalizar o vetor normal
+                            len_v = sqrt(nx*nx + ny*ny);
+                            nx /= len_v;
+                            ny /= len_v;
+                            break;
+                    }
+                    break;
+            }
+            if (distanciaNormalDirecao(nx,ny))
+            {
+                calculaVetorNovo(nx,ny);
+            }
+        }
+    }
+}
+
+bool distanciaTijolo(int i, int j)
+{
+    float auxX = sphereX - (fs.m[i][j].vMenor.x + comprimento);
+    float auxY = sphereY - (fs.m[i][j].vMenor.y + largura);
+    return auxX*auxX+auxY*auxY <= raioAreaImpacto*raioAreaImpacto;
+}
+
+void colisaoTijolo()
+{
+    for(int i = 0; i < matrizLinha; i++)
+    {
+        for(int j = 0; j < matrizColuna; j++)
+        {
+            if(launched && fs.m[i][j].alive && distanciaTijolo(i,j))
+            {
+                float len_v = 0;
+                float d = 0, aux = 0;
+                float nx = 0, ny = 0;
+                int xbool = 1, ybool = 1;
+                float xTijolo = fs.m[i][j].vMenor.x , yTijolo = fs.m[i][j].vMenor.y;
+                if (sphereX<xTijolo)
+                {
+                    xbool = 0;
+                    aux = sphereX - xTijolo;
+                    d = d+aux*aux;
+                }
+                else if (sphereX>xTijolo+comprimento)
+                {
+                    xbool = 2;
+                    aux = sphereX - (xTijolo+comprimento);
+                    d = d+aux*aux;
+                }
+
+                if (sphereY<yTijolo)
+                {
+                    ybool = 0;
+                    aux = sphereY - yTijolo;
+                    d = d+aux*aux;
+                }
+                else if (sphereY>yTijolo+largura)
+                {
+                    ybool = 2;
+                    aux = sphereY - (yTijolo+largura);
+                    d = d+aux*aux;
+                }
+
+                if(d <= 0.25)
+                {
+                    switch (xbool)
+                    {
+                        case 0:
+                            switch (ybool)
+                            {
+                                case 0:
+                                    nx = sphereX - xTijolo;
+                                    ny = sphereY - yTijolo;
+                                    //parte para normalizar o vetor normal
+                                    len_v = sqrt(nx*nx + ny*ny);
+                                    nx /= len_v;
+                                    ny /= len_v;
+                                    break;
+                                case 1:
+                                    nx = -1;
+                                    ny = 0;
+                                    break;
+                                case 2:
+                                    nx = sphereX - xTijolo;
+                                    ny = sphereY - (yTijolo+largura);
+                                    //parte para normalizar o vetor normal
+                                    len_v = sqrt(nx*nx + ny*ny);
+                                    nx /= len_v;
+                                    ny /= len_v;
+                                    break;
+                            }
+                            break;
+                        case 1:
+                            switch (ybool)
+                            {
+                                case 0:
+                                    nx = 0;
+                                    ny = -1;
+                                    break;
+                                case 2:
+                                    nx = 0;
+                                    ny = 1;
+                                    break;
+                            }
+                            break;
+                        case 2:
+                            switch (ybool)
+                            {
+                                case 0:
+                                    nx = sphereX - (xTijolo+comprimento);
+                                    ny = sphereY - yTijolo;
+                                    //parte para normalizar o vetor normal
+                                    len_v = sqrt(nx*nx + ny*ny);
+                                    nx /= len_v;
+                                    ny /= len_v;
+                                    break;
+                                case 1:
+                                    nx = 1;
+                                    ny = 0;
+                                    break;
+                                case 2:
+                                    nx = sphereX - (xTijolo+comprimento);
+                                    ny = sphereY - (yTijolo+largura);
+                                    //parte para normalizar o vetor normal
+                                    len_v = sqrt(nx*nx + ny*ny);
+                                    nx /= len_v;
+                                    ny /= len_v;
+                                    break;
+                            }
+                            break;
+                    }
+                    if (distanciaNormalDirecao(nx,ny))
+                    {
+                        calculaVetorNovo(nx,ny);
+                        fs.m[i][j].colidiu();
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -310,12 +627,13 @@ void idle ()
 
     //verifica colisão com o ambiente
     colisionAmbient();
-
+    colisaoBarra();
+    colisaoTijolo();
     float step = 1;
     if(launched)//verifica se a esfera foi lançada, se caso ocorrer movimenta a esfera com a direção e velocidades apropriados
     {
-        velX = dx*velInicial*intensidade;
-        velY = dy*velInicial*intensidade;
+        velX = dx*velInicial;
+        velY = dy*velInicial;
         sphereX+=velX* (step / desiredFPS);
         sphereY+=velY* (step / desiredFPS);
     }
@@ -323,8 +641,8 @@ void idle ()
     {
         dx = cos((direction+90)*0.0174533);
         dy = sin((direction+90)*0.0174533);
-        sphereX = 0;
-        sphereY = -9.5;
+        sphereX = barraX;
+        sphereY = barraY + 0.5 + barraH/2;
     }
 
     tLast = t;
@@ -347,33 +665,7 @@ void keyboard (unsigned char key, int x, int y)
         case 27:
             exit(0);
             break;
-        case 'w':
-            if(!launched && velInicial < 2.5)
-            {
-                velInicial +=0.5;
-            }
-            break;
-        case 's':
-            if(!launched && velInicial > 0.5)
-            {
-                velInicial -=0.5;
-            }
-            break;
-        case 'd':
-            if(!launched && direction > -75)
-            {
-                direction -=1;
-            }
-            break;
-        case 'a':
-            if(!launched && direction < 75)
-            {
-                direction +=1;
-            }
-            break;
-        case 32:
-            launched = !launched;
-            break;
+
         case 'p':
             projection = !projection;
             break;
@@ -383,9 +675,19 @@ void keyboard (unsigned char key, int x, int y)
 // Motion callback
 void motion(int x, int y )
 {
-    rotationX += (float) (y - last_y);
-    rotationY += (float) (x - last_x);
-
+    if(x - width / 2>0)
+    {
+        barraX+=velMouse;
+    }
+    else if(x - width / 2<0)
+    {
+        barraX-=velMouse;
+    }
+    if(barraX > 10-barraW/2)
+        barraX = 10-barraW/2;
+    else if (barraX < -10+barraW/2)
+        barraX = -10+barraW/2;
+    glutWarpPointer(width / 2, height / 2);
     last_x = x;
     last_y = y;
 }
@@ -395,16 +697,21 @@ void mouse(int button, int state, int x, int y)
 {
     if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
     {
-        last_x = x;
-        last_y = y;
+        launched = !launched;
     }
     if(button == 3) // Scroll up
     {
-        zdist+=1.0f;
+        if(!launched && direction < 75)
+            {
+                direction +=1;
+            }
     }
     if(button == 4) // Scroll Down
     {
-        zdist-=1.0f;
+        if(!launched && direction > -75)
+            {
+                direction -=1;
+            }
     }
 }
 
@@ -421,6 +728,7 @@ int main(int argc, char** argv)
     glutReshapeFunc(reshape);
     glutMouseFunc( mouse );
     glutMotionFunc( motion );
+    glutPassiveMotionFunc( motion );
     glutKeyboardFunc(keyboard);
     glutIdleFunc(idle);
     glutMainLoop();
