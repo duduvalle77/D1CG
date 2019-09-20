@@ -1,11 +1,11 @@
 #ifndef FASESELECTOR_H
 #define FASESELECTOR_H
 #include <iostream>
-#define largura 0.5
-#define comprimento 2.0
-#define altura 1.0
-#define matrizLinha 10
-#define matrizColuna 8
+#define matrizLinha 1
+#define matrizColuna 1
+#define largur 0.5
+#define compriment 2
+#define altur 1
 using namespace std;
 
 class vertice
