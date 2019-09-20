@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include "../src/D1/extras.h"
+#include "../src/extras.h"
 #include <ctime>
 #include <vector>
 #include <algorithm>
@@ -23,7 +23,7 @@ int   last_x, last_y;
 int   width = 1000, height = 600;
 float barraH = 1, barraW = 4.0;
 float barraX = -barraW/2, barraY = -barraH/2-10+barraH*1.5;
-float desiredFPS = 60; //define fps do deslocamento da esfera
+float desiredFPS = 30; //define fps do deslocamento da esfera
 float direction = 0.0;//direção do disparador em angulos
 float sphereX = 0, sphereY = -9.5; //variavel que determinam a posição da esfera
 float velX = 0, velY = 0, velInicial = 12.5; //variavel que determinam a velocidade da esfera
@@ -482,6 +482,7 @@ void idle ()
         }
     }
         tLast = t;
+        glutWarpPointer(width / 2, height / 2);
         glutPostRedisplay();
 
 }
@@ -548,10 +549,17 @@ void motion(int x, int y )
         barraX-=velMouse;
     }
     if(barraX > 9.5-barraW)
+    {
         barraX = 9.5-barraW;
+    }
     else if (barraX < -9.5)
+    {
         barraX = -9.5;
-    glutWarpPointer(width / 2, height / 2);
+    }
+    if(x<0 || x>width)
+    {
+        glutWarpPointer(width / 2, height / 2);
+    }
     last_x = x;
     last_y = y;
 }
@@ -563,8 +571,7 @@ void motionClick(int x, int y )
         rotationX += (float) (y - last_y);
         rotationY += (float) (x - last_x);
 
-        last_x = x;
-        last_y = y;
+
     }
     else
     {
@@ -577,12 +584,15 @@ void motionClick(int x, int y )
             barraX-=velMouse;
         }
         if(barraX > 9.5-barraW)
+        {
             barraX = 9.5-barraW;
+        }
         else if (barraX < -9.5)
+        {
             barraX = -9.5;
-        glutWarpPointer(width / 2, height / 2);
-        last_x = x;
-        last_y = y;
+        }
+    last_x = x;
+    last_y = y;
     }
 }
 // Mouse callback
