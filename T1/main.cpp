@@ -38,14 +38,14 @@ bool movimentacao = false;
 //variaveis utilizadas para definir a posição dos prismas
 float x = 1.0, y = 1.0;
 faseSelector fs;
-float mColor[matrizLinha][3];
+float mColor[matrizLinha][3];//matriz para corolir os tijolos
 /// Functions
 void init(void)
 {
     srand(time(0));
     initLight(width, height);
     fs.construirGrid();
-    for (int i = 0; i < matrizLinha; i++)
+    for (int i = 0; i < matrizLinha; i++)//definição de cores aleatórias para os tijolos
     {
         mColor[i][0] = float((rand() % 10)) / 9.0;
         mColor[i][1] = float((rand() % 10)) / 9.0;
@@ -53,6 +53,7 @@ void init(void)
     }
 }
 
+///Função para desenhar os tijolos, as paredes e a barra de lançamento
 void drawBrick(float x, float y, float comprimento, float largura, float altura)
 {
     vertice vBase[4] = {{x,y,0},
@@ -205,6 +206,7 @@ void display(void)
         glRotatef( rotationX, 1.0, 0.0, 0.0 );
         setColor(1,0,0);
         drawBrick(barraX,barraY,barraW,barraH,altur);
+        ///Loop para desenhar a fase com cores aleatórias para cada linha do grid
         for(int i = 0; i < matrizLinha; i++)
         {
             setColor(mColor[i][0], mColor[i][1], mColor[i][2]);
