@@ -27,15 +27,15 @@ float desiredFPS = 30; //define fps do deslocamento da esfera
 float direction = 0.0;//direção do disparador em angulos
 float sphereX = 0, sphereY = -9.5; //variavel que determinam a posição da esfera
 float velX = 0, velY = 0, velInicial = 12.5; //variavel que determinam a velocidade da esfera
-float velMouse = 0.25;
+float velMouse = 0.25; // velocidade da barra
 bool launched = false; //variavel que determina se a esfera foi lançada
 bool projection = false; //variavel que determina que tipo de projeção utilizar
 float dx, dy; //valores de x e y do vetor direção normalizados
-float raioAreaImpacto = 5; //variavel que determina a distancia minima para verificar a possibilidade de colisão da esfera com um prisma
-bool paused = false;
-bool fullscreen = false;
-bool movimentacao = false;
-//variaveis utilizadas para definir a posição dos prismas
+float raioAreaImpacto = 5; //variavel que determina a distancia minima para verificar a possibilidade de colisão da esfera com um tijolo
+bool paused = false; // variavel para determiar se o jogo esta pausado
+bool fullscreen = false; // variavel para determiar se o jogo esta em fullscreen
+bool movimentacao = false; // variavel para determiar se o jogo esta com movimentacao livre na projecao em perpectiva
+//variaveis utilizadas para definir a posição dos tijolos
 float x = 1.0, y = 1.0;
 faseSelector fs;
 float mColor[matrizLinha][3];//matriz para corolir os tijolos
@@ -200,7 +200,7 @@ void display(void)
         gluLookAt (0.0, -10.0, zdist, 0.0, -2.0, 0.0, 0.0, 1.0, 0.0);
     }
 
-    //chama as funções de desenhar prismas e ambiente, além de desenhar o disparador e a esfera
+    //chama as funções de desenhar tijolos e ambiente, além de desenhar o disparador e a esfera
     glPushMatrix();
         glRotatef( rotationY, 0.0, 1.0, 0.0 );
         glRotatef( rotationX, 1.0, 0.0, 0.0 );
@@ -212,7 +212,7 @@ void display(void)
             setColor(mColor[i][0], mColor[i][1], mColor[i][2]);
             for(int j = 0; j < matrizColuna; j++)
             {
-                if(fs.m[i][j].alive)
+                if(fs.m[i][j].alive) // desenha tijolo apenas se n foi destruido
                 {
                     drawBrick(fs.m[i][j].vMenor.x, fs.m[i][j].vMenor.y, compriment, largur, altur);
                 }
@@ -281,7 +281,7 @@ void colisionAmbient()
         launched = !launched;
     }
 }
-
+//funcao para determinar se houve colisao anteriormente com a mesma barra
 bool distanciaNormalDirecao(float nx,float ny)
 {
     float auxX = nx - dx;
@@ -289,16 +289,18 @@ bool distanciaNormalDirecao(float nx,float ny)
     float d = auxX*auxX + auxY*auxY;
     return d > 2;
 }
-
+//funcao para determinar se a barra esta a certa distancia da esfera
 bool distanciaTijolo(float x, float y, float comprimento, float largura)
 {
     float auxX = sphereX - (x + compriment/2);
     float auxY = sphereY - (y + largur/2);
     return auxX*auxX+auxY*auxY <= raioAreaImpacto*raioAreaImpacto;
 }
-
+//funcao para determinar se houve colisao entre a esfera e a barra
 bool colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largura)
 {
+    //colisao AABB deste livro: [Arvo 90] J. Arvo. “A Simple Method for Box-Sphere Intersection Testing.” In
+    //Graphics Gems, edited by Andrew Glassner, pp. 335–339. San Diego, CA: Academic Press Professional, Inc., 1990.
     bool colidiu = false;
     float len_v = 0;
     float d = 0, aux = 0;
@@ -332,7 +334,7 @@ bool colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largur
 
     if(d <= 0.25)
     {
-        switch (xbool)
+        switch (xbool) // switch para determinar normal
         {
         case 0:
             switch (ybool)
@@ -398,7 +400,7 @@ bool colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largur
             }
             break;
         }
-        if (distanciaNormalDirecao(nx,ny))
+        if (distanciaNormalDirecao(nx,ny)) // verifica se ja houve colisao com essa barra
         {
             calculaVetorNovo(nx,ny);
             colidiu = true;
@@ -407,7 +409,7 @@ bool colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largur
     return colidiu;
 }
 
-void colisao()
+void colisao() //funcao para agrupar todas as colisoes
 {
     colisionAmbient();
     for(int i = 0; i < matrizLinha; i++)
@@ -430,7 +432,7 @@ void colisao()
     }
 }
 
-bool faseTerminou()
+bool faseTerminou() //funcao para determinar se a fase terminou
 {
     for(int i = 0; i < matrizLinha; i++)
     {
@@ -462,9 +464,8 @@ void idle ()
     // Check if the desired frame time was achieved. If not, skip animation.
     if( frameTime <= desiredFrameTime)
         return;
-    //verifica colisão com o ambiente
 
-    if(!paused && !faseTerminou())
+    if(!paused && !faseTerminou())//verifica se o jogo esta pausado ou terminou a fase
     {
         colisao();
         float step = 1;
@@ -484,7 +485,7 @@ void idle ()
         }
     }
         tLast = t;
-        glutWarpPointer(width / 2, height / 2);
+        glutWarpPointer(width / 2, height / 2);//lanca mouse para o meio da tela
         glutPostRedisplay();
 
 }
@@ -557,10 +558,6 @@ void motion(int x, int y )
     else if (barraX < -9.5)
     {
         barraX = -9.5;
-    }
-    if(x<0 || x>width)
-    {
-        glutWarpPointer(width / 2, height / 2);
     }
     last_x = x;
     last_y = y;
