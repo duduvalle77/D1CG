@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include "include/extras.h"
+#include "src/extras.h"
 #include <ctime>
 #include <vector>
 #include <algorithm>
@@ -35,6 +35,7 @@ float raioAreaImpacto = 5; //variavel que determina a distancia minima para veri
 bool paused = false; // variavel para determiar se o jogo esta pausado
 bool fullscreen = false; // variavel para determiar se o jogo esta em fullscreen
 bool movimentacao = false; // variavel para determiar se o jogo esta com movimentacao livre na projecao em perpectiva
+bool terminou = false; // variável para determinar o fim do jogo
 //variaveis utilizadas para definir a posição dos tijolos
 float x = 1.0, y = 1.0;
 faseSelector fs;
@@ -44,7 +45,7 @@ void init(void)
 {
     srand(time(0));
     initLight(width, height);
-    fs.construirGrid();
+    fs.construirGrid(fs.seletor);
     for (int i = 0; i < matrizLinha; i++)//definição de cores aleatórias para os tijolos
     {
         mColor[i][0] = float((rand() % 10)) / 9.0;
@@ -432,7 +433,7 @@ void colisao() //funcao para agrupar todas as colisoes
     }
 }
 
-bool faseTerminou() //funcao para determinar se a fase terminou
+void faseTerminou() //funcao para determinar se a fase terminou
 {
     for(int i = 0; i < matrizLinha; i++)
     {
@@ -440,11 +441,22 @@ bool faseTerminou() //funcao para determinar se a fase terminou
         {
             if(fs.m[i][j].alive)
             {
-                return false;
+                return;
             }
         }
     }
-    return true;
+    launched = false;
+    fs.fase();
+    if (fs.seletor == 3)
+    {
+        terminou = true;
+        return;
+    }
+    else
+    {
+        fs.construirGrid(fs.seletor);
+    }
+    return;
 }
 
 void idle ()
@@ -464,8 +476,8 @@ void idle ()
     // Check if the desired frame time was achieved. If not, skip animation.
     if( frameTime <= desiredFrameTime)
         return;
-
-    if(!paused && !faseTerminou())//verifica se o jogo esta pausado ou terminou a fase
+    faseTerminou();
+    if(!paused && !terminou)//verifica se o jogo esta pausado ou terminou a fase
     {
         colisao();
         float step = 1;
@@ -507,7 +519,7 @@ void keyboard (unsigned char key, int x, int y)
             exit(0);
             break;
         case 'r':
-            fs.construirGrid();
+            fs.construirGrid(fs.seletor);
             launched = false;
             barraX = -barraW/2;
             direction = 0;
@@ -543,11 +555,11 @@ void keyboard (unsigned char key, int x, int y)
 // Motion callback
 void motion(int x, int y )
 {
-    if(x - width / 2>0 && !paused)
+    if(x - width / 2>0 && !paused && !terminou)
     {
         barraX+=velMouse;
     }
-    else if(x - width / 2<0 && !paused)
+    else if(x - width / 2<0 && !paused && !terminou)
     {
         barraX-=velMouse;
     }
