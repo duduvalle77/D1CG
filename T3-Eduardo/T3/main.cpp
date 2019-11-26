@@ -83,9 +83,6 @@ vertice v2[faces+1];
 vertice normal2[faces+1];
 float xLombadaE,yLombadaE=0,xLombadaD,yLombadaD=0;
 
-float raiz3 = sqrt(3);
-vertice normalBrick = {1/raiz3,1/raiz3,1/raiz3};
-
 vertice objetos[2] = {{0,0,0.5},{0,0,0.5}};
 int objCond[2] = {3,3};
 float objEscala[2] = {0.5,0.5};
@@ -101,7 +98,6 @@ void criaCirculo()
     float angulo = (2*asin(barraW/2/raio))*180/PI;
     float g =(180-angulo)/2;
     float k = angulo/faces;
-    float aux = 0, auy = 0, auz = 0, tamanho=0;
     dist = (0.5+raio)*(0.5+raio);
     yRebatedor = barraY+barraH-raio;
     for(int i = 0; i < faces+1; i++)
@@ -110,13 +106,9 @@ void criaCirculo()
         v[i].x = raio * cos(g * PI / 180);
         v[i].y = raio * sin(g * PI / 180)+yRebatedor;
         v[i].z = 0;
-        aux = 1 * cos(g * PI / 180);
-        auy = 1 * sin(g * PI / 180);
-        auz = 1;
-        tamanho = sqrt(aux*aux+auy*auy+auz*auz);
-        normal[i].x = aux/tamanho;
-        normal[i].y = auy/tamanho;
-        normal[i].z = auz/tamanho;
+        normal[i].x = 1 * cos(g * PI / 180);
+        normal[i].y = 1 * sin(g * PI / 180);
+        normal[i].z = 0;
         g += k;
     }
 
@@ -132,13 +124,9 @@ void criaCirculo()
         v1[i].x = raio * cos(g * PI / 180)+xLombadaE;
         v1[i].y = raio * sin(g * PI / 180);
         v1[i].z = 0;
-        aux = 1 * cos(g * PI / 180);
-        auy = 1 * sin(g * PI / 180);
-        auz = 1;
-        tamanho = sqrt(aux*aux+auy*auy+auz*auz);
-        normal1[i].x = aux/tamanho;
-        normal1[i].y = auy/tamanho;
-        normal1[i].z = auz/tamanho;
+        normal1[i].x = 1 * cos(g * PI / 180);
+        normal1[i].y = 1 * sin(g * PI / 180);
+        normal1[i].z = 0;
         g += k;
     }
     g = (360-angulo)/2;
@@ -149,13 +137,9 @@ void criaCirculo()
         v2[i].x = raio * cos(g * PI / 180)+xLombadaD;
         v2[i].y = raio * sin(g * PI / 180);
         v2[i].z = 0;
-        aux = 1 * cos(g * PI / 180);
-        auy = 1 * sin(g * PI / 180);
-        auz = 1;
-        tamanho = sqrt(aux*aux+auy*auy+auz*auz);
-        normal2[i].x = aux/tamanho;
-        normal2[i].y = auy/tamanho;
-        normal2[i].z = auz/tamanho;
+        normal2[i].x = 1 * cos(g * PI / 180);
+        normal2[i].y = 1 * sin(g * PI / 180);
+        normal2[i].z = 0;
         g += k;
     }
 }
@@ -310,73 +294,57 @@ void drawBrick(float x, float y, float comprimento, float largura, float altura)
 
     ///Base
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(0,0,-1);
     glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
-    glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
-    glNormal3f(normalBrick.x,normalBrick.y,-normalBrick.z);
-    glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
-    glNormal3f(-normalBrick.x,normalBrick.y,-normalBrick.z);
     glVertex3f(vBase[3].x, vBase[3].y, vBase[3].z);
+    glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
+    glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
+
+
     glEnd();
 
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
+    glNormal3f(0,0,1);
     glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
-    glNormal3f(normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
-    glNormal3f(-normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(vTopo[3].x, vTopo[3].y, vTopo[3].z);
     glEnd();
 
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(0,-1,0);
     glVertex3f(frente[0].x, frente[0].y, frente[0].z);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
     glVertex3f(frente[1].x, frente[1].y, frente[1].z);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(frente[2].x, frente[2].y, frente[2].z);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(frente[3].x, frente[3].y, frente[3].z);
     glEnd();
 
     ///Direita
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(1,0,0);
     glVertex3f(direito[0].x, direito[0].y, direito[0].z);
-    glNormal3f(normalBrick.x,normalBrick.y,-normalBrick.z);
     glVertex3f(direito[1].x, direito[1].y, direito[1].z);
-    glNormal3f(normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(direito[2].x, direito[2].y, direito[2].z);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(direito[3].x, direito[3].y, direito[3].z);
     glEnd();
 
     ///Costas
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(normalBrick.x,normalBrick.y,-normalBrick.z);
+    glNormal3f(0,1,0);
     glVertex3f(costas[0].x, costas[0].y, costas[0].z);
-    glNormal3f(-normalBrick.x,normalBrick.y,-normalBrick.z);
     glVertex3f(costas[1].x, costas[1].y, costas[1].z);
-    glNormal3f(-normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(costas[2].x, costas[2].y, costas[2].z);
-    glNormal3f(normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(costas[3].x, costas[3].y, costas[3].z);
     glEnd();
 
     ///Esquerda
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,normalBrick.y,-normalBrick.z);
+    glNormal3f(-1,0,0);
     glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
     glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
-    glNormal3f(-normalBrick.x,normalBrick.y,normalBrick.z);
     glVertex3f(esquerdo[3].x, esquerdo[3].y, esquerdo[3].z);
     glEnd();
 }
@@ -384,7 +352,9 @@ void drawBrick(float x, float y, float comprimento, float largura, float altura)
 // Função para desenhar as paredes e a superficie
 void drawEnviroment(void)
 {
+
     //plano
+
     setColor(cores[0].x,cores[0].y,cores[0].z);
     glBegin(GL_TRIANGLE_FAN);
 
@@ -431,33 +401,28 @@ void drawLombadas()
 
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal1[faces].x, normal1[faces].y,normal1[faces].z);
+    glNormal3f(0,0,1);
     glVertex3f(v1[faces].x, v1[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
-        glNormal3f( normal1[i].x, normal1[i].y,normal1[i].z);
         glVertex3f(v1[i].x, v1[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal1[faces].x, normal1[faces].y,-normal1[faces].z);
-    glVertex3f(v1[faces].x, v1[faces].y, 0);
-    for(int i = 0; i < faces; i++)
+    glNormal3f(0,0,-1);
+    glVertex3f(v1[0].x, v1[0].y, 0);
+    for(int i = faces; i > 0 ; i--)
     {
-        glNormal3f( normal1[i].x, normal1[i].y,-normal1[i].z);
         glVertex3f(v1[i].x, v1[i].y, 0);
     }
     glEnd();
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(0,-1,0);
     glVertex3f(v1[faces].x, v1[faces].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
     glVertex3f(v1[0].x, v1[0].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v1[0].x, v1[0].y, altura);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v1[faces].x, v1[faces].y, altura);
     glEnd();
 
@@ -479,33 +444,28 @@ void drawLombadas()
 
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal2[faces].x, normal2[faces].y,normal2[faces].z);
+    glNormal3f(0,0,1);
     glVertex3f(v2[faces].x, v2[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
-        glNormal3f( normal2[i].x, normal2[i].y,normal2[i].z);
         glVertex3f(v2[i].x, v2[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal2[faces].x, normal2[faces].y,-normal2[faces].z);
-    glVertex3f(v2[faces].x, v2[faces].y, 0);
-    for(int i = 0; i < faces; i++)
+    glNormal3f(0,0,-1);
+    glVertex3f(v2[0].x, v2[0].y, 0);
+    for(int i = faces; i > 0; i--)
     {
-        glNormal3f( normal2[i].x, normal2[i].y,-normal2[i].z);
         glVertex3f(v2[i].x, v2[i].y, 0);
     }
     glEnd();
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(0,-1,0);
     glVertex3f(v2[faces].x, v2[faces].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
     glVertex3f(v2[0].x, v2[0].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v2[0].x, v2[0].y, altura);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v2[faces].x, v2[faces].y, altura);
     glEnd();
 }
@@ -530,33 +490,28 @@ void drawBarra()
 
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal[faces].x, normal[faces].y,normal[faces].z);
+    glNormal3f(0,0,1);
     glVertex3f(v[faces].x+xRebatedor, v[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
-        glNormal3f( normal[i].x, normal[i].y,normal[i].z);
         glVertex3f(v[i].x+xRebatedor, v[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f( normal[faces].x, normal[faces].y,-normal[faces].z);
-    glVertex3f(v[faces].x+xRebatedor, v[faces].y, 0);
-    for(int i = 0; i < faces; i++)
+    glNormal3f(0,0,-1);
+    glVertex3f(v[0].x+xRebatedor, v[0].y, 0);
+    for(int i = faces; i > 0; i--)
     {
-        glNormal3f( normal[i].x, normal[i].y,-normal[i].z);
         glVertex3f(v[i].x+xRebatedor, v[i].y, 0);
     }
     glEnd();
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
-    glNormal3f(-normalBrick.x,-normalBrick.y,-normalBrick.z);
+    glNormal3f(0,-1,0);
     glVertex3f(v[faces].x+xRebatedor, v[faces].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,-normalBrick.z);
     glVertex3f(v[0].x+xRebatedor, v[0].y, 0);
-    glNormal3f(normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v[0].x+xRebatedor, v[0].y, altura);
-    glNormal3f(-normalBrick.x,-normalBrick.y,normalBrick.z);
     glVertex3f(v[faces].x+xRebatedor, v[faces].y, altura);
     glEnd();
 }
@@ -604,6 +559,7 @@ void display(void)
         glRotatef( rotationX, 1.0, 0.0, 0.0 );
         setColor(cores[3].x,cores[3].y,cores[3].z);
         drawBarra();
+        setColor(1,1,0);
         ///Pedra 1 entra nesse glPushMatrix
         glPushMatrix();
             setColor(1,0,0);
@@ -650,7 +606,7 @@ void display(void)
             setColor(0,1,0);
             glTranslatef(sphereX,sphereY,0.5);
             glutSolidSphere(0.5,100,100);
-        if(!launched){//verifica se a bola foi lançada para desenhar o disparador
+        if(!launched && !terminou){//verifica se a bola foi lançada para desenhar o disparador
                 glRotatef(direction,0,0,1);
                 setColor(1,0,0);
                 glTranslatef(0,1.75,0);
@@ -908,12 +864,9 @@ bool colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largur
 
 void colisaoBarra(float xTijolo, float yTijolo, float comprimento, float largura, int i)
 {
-    //colisao AABB deste livro: [Arvo 90] J. Arvo. “A Simple Method for Box-Sphere Intersection Testing.” In
-    //Graphics Gems, edited by Andrew Glassner, pp. 335–339. San Diego, CA: Academic Press Professional, Inc., 1990.
     float len_v = 0;
-    float d = 0, aux = 0;
+    float aux = 0;
     float nx = 0, ny = 0;
-    int ybool = 1;
     float xEsfera, yEsfera;
     if(i<2)
     {
@@ -925,61 +878,33 @@ void colisaoBarra(float xTijolo, float yTijolo, float comprimento, float largura
         xEsfera = sphereX;
         yEsfera = sphereY;
     }
-
-    if (xEsfera<xTijolo)
+    if(yEsfera<yTijolo)
     {
-        aux = xEsfera - xTijolo;
-        d = d+aux*aux;
-    }
-    else if (xEsfera>xTijolo+comprimento)
-    {
-        aux = xEsfera - (xTijolo+comprimento);
-        d = d+aux*aux;
+        return;
     }
 
-    if (yEsfera<yTijolo)
+    nx = xEsfera - xRebatedor;
+    ny = yEsfera - yRebatedor;
+    aux = nx*nx + ny*ny;
+    //parte para normalizar o vetor normal
+    len_v = sqrt(nx*nx + ny*ny);
+    nx /= len_v;
+    ny /= len_v;
+    cout << aux << " " << dist << " " << distanciaNormalDirecao(nx,ny,i) << endl;
+    if (distanciaNormalDirecao(nx,ny,i) && aux <= dist) // verifica se ja houve colisao com essa barra
     {
-        ybool = 0;
-        aux = yEsfera - yTijolo;
-        d = d+aux*aux;
-    }
-    else if (yEsfera>yTijolo+largura)
-    {
-        ybool = 2;
-        aux = yEsfera - (yTijolo+largura);
-        d = d+aux*aux;
-    }
-
-    if(d <= 0.25)
-    {
-        if(ybool == 0)
+        calculaVetorNovo(nx,ny,i);
+        if(i<2)
         {
-            return;
-        }
-        nx = xEsfera - xRebatedor;
-        ny = yEsfera - yRebatedor;
-        aux = nx*nx + ny*ny;
-        //parte para normalizar o vetor normal
-        len_v = sqrt(nx*nx + ny*ny);
-        nx /= len_v;
-        ny /= len_v;
-        if (distanciaNormalDirecao(nx,ny,i) && aux <= dist) // verifica se ja houve colisao com essa barra
-        {
-            calculaVetorNovo(nx,ny,i);
-            if(i<2)
-            {
-                objCond[i] = 2;
-            }
+            objCond[i] = 2;
         }
     }
 }
 
 void colisaoLombada(float xTijolo, float yTijolo, float comprimento, float largura, int lombada, int i)
 {
-    //colisao AABB deste livro: [Arvo 90] J. Arvo. “A Simple Method for Box-Sphere Intersection Testing.” In
-    //Graphics Gems, edited by Andrew Glassner, pp. 335–339. San Diego, CA: Academic Press Professional, Inc., 1990.
     float len_v = 0;
-    float d = 0, aux = 0;
+    float aux = 0;
     float nx = 0, ny = 0;
     int xbool = 1;
     float xlombada = 0;
@@ -994,65 +919,56 @@ void colisaoLombada(float xTijolo, float yTijolo, float comprimento, float largu
         xEsfera = sphereX;
         yEsfera = sphereY;
     }
-
     if (xEsfera<xTijolo)
     {
         xbool = 0;
-        aux = xEsfera - xTijolo;
-        d = d+aux*aux;
     }
     else if (xEsfera>xTijolo+comprimento)
     {
         xbool = 2;
-        aux = xEsfera - (xTijolo+comprimento);
-        d = d+aux*aux;
     }
-
-    if (yEsfera<yTijolo)
+    if(lombada == 0)
     {
-        aux = yEsfera - yTijolo;
-        d = d+aux*aux;
+        if(xbool == 0)
+        {
+            return;
+        }
+        xlombada = xLombadaE;
     }
-    else if (yEsfera>yTijolo+largura)
+    else
     {
-        aux = yEsfera - (yTijolo+largura);
-        d = d+aux*aux;
+        if(xbool == 2)
+        {
+            return;
+        }
+        xlombada = xLombadaD;
     }
-
-    if(d <= 0.25)
+    nx = xEsfera - xlombada;
+    ny = yEsfera - yLombadaD;
+    aux = nx*nx + ny*ny;
+    //parte para normalizar o vetor normal
+    len_v = sqrt(nx*nx + ny*ny);
+    nx /= len_v;
+    ny /= len_v;
+    if (distanciaNormalDirecao(nx,ny,i) && aux <= dist12) // verifica se ja houve colisao com essa barra
     {
-        if(lombada == 0)
-        {
-            if(xbool == 0)
-            {
-                return;
-            }
-            xlombada = xLombadaE;
-        }
-        else
-        {
-            if(xbool == 2)
-            {
-                return;
-            }
-            xlombada = xLombadaD;
-        }
-        nx = xEsfera - xlombada;
-        ny = yEsfera - yLombadaD;
-        aux = nx*nx + ny*ny;
-        //parte para normalizar o vetor normal
-        len_v = sqrt(nx*nx + ny*ny);
-        nx /= len_v;
-        ny /= len_v;
-        if (distanciaNormalDirecao(nx,ny,i) && aux <= dist12) // verifica se ja houve colisao com essa barra
-        {
-            calculaVetorNovo(nx,ny,i);
-        }
+        calculaVetorNovo(nx,ny,i);
     }
 }
 
 void colisao(int k) //funcao para agrupar todas as colisoes
 {
+    float xEsfera, yEsfera;
+    if(k<2)
+    {
+        xEsfera = objetos[k].x;
+        yEsfera = objetos[k].y;
+    }
+    else
+    {
+        xEsfera = sphereX;
+        yEsfera = sphereY;
+    }
     colisionAmbient(k);
     for(int i = 0; i < matrizLinha; i++)
     {
@@ -1068,15 +984,15 @@ void colisao(int k) //funcao para agrupar todas as colisoes
             }
         }
     }
-    if((launched || k<2) && distanciaTijolo(barraX,barraY,barraW,barraH,k))
+    if((launched || k<2) && yEsfera<-5)
     {
         colisaoBarra(barraX,barraY,barraW,barraH,k);
     }
-    if((launched || k<2) && distanciaTijolo(-10,-4,0.5,8,k))
+    if((launched || k<2)&& xEsfera<-5)
     {
         colisaoLombada(-10,-4,0.5,8,0,k);
     }
-    if((launched || k<2) && distanciaTijolo(9.5,-4,0.5,8,k))
+    if((launched || k<2)&& xEsfera>5)
     {
         colisaoLombada(9.5,-4,0.5,8,1,k);
     }
@@ -1113,7 +1029,16 @@ bool colisaoObjeto(int i)
 {
     float auxX = sphereX - objetos[i].x;
     float auxY = sphereY - objetos[i].y;
-    return auxX*auxX+auxY*auxY <= 1;
+    float auxTotal = auxX*auxX+auxY*auxY;
+    bool colidiu = auxTotal <= 1;
+    float len_v = sqrt(auxTotal);
+    auxX /= len_v;
+    auxY /= len_v;
+    if (distanciaNormalDirecao(auxX,auxY,2) && colidiu) // verifica se ja houve colisao com essa barra
+    {
+        calculaVetorNovo(auxX,auxY,2);
+    }
+    return colidiu;
 }
 
 void idle ()
