@@ -17,11 +17,11 @@ class vertice
 class tijolo
 {
     public:
-        tijolo(){/*Construtor vazio do Tijolo*/};
+        tijolo(){alive = false;};
         void setVertice(float vx, float vy); //função para preencher os pontos x e y do vMenor e colocar alive como verdadeiro
         void colidiu();//função para modificar alive para falso quando colidir
 
-        bool alive = false;
+        bool alive;
         vertice vMenor;
 };
 
@@ -33,7 +33,7 @@ class faseSelector
         ~faseSelector();
         void construirGrid(int select);//função para criar o grid, baseado na matriz m
         tijolo m[matrizLinha][matrizColuna];
-        int seletor = 0;
+        int seletor;
         void fase();
 
     protected:

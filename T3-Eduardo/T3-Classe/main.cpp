@@ -137,11 +137,11 @@ void setColor(float r, float g, float b)
 
 void colorir(int i)
 {
-    for (int i = 0; i < matrizLinha; i++)//definição de cores aleatórias para os tijolos
+    for (int j = 0; j < matrizLinha; j++)//definição de cores aleatórias para os tijolos
     {
-        mColor[i][0] = float((rand() % 10)) / 9.0;
-        mColor[i][1] = float((rand() % 10)) / 9.0;
-        mColor[i][2] = float((rand() % 10)) / 9.0;
+        mColor[j][0] = float((rand() % 10)) / 9.0;
+        mColor[j][1] = float((rand() % 10)) / 9.0;
+        mColor[j][2] = float((rand() % 10)) / 9.0;
     }
     switch(i)
     {

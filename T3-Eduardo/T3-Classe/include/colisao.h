@@ -13,8 +13,6 @@
 #include "glcWavefrontObject.h"
 #include <iostream>
 
-float raioAreaImpacto = 4;
-
 class colisao
 {
     public:

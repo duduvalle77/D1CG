@@ -15,7 +15,7 @@ void tijolo::colidiu()
 
 faseSelector::faseSelector()
 {
-    //ctor
+    seletor = 0;
 }
 
 faseSelector::~faseSelector()

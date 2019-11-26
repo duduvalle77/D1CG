@@ -137,7 +137,7 @@ bool colisao::distanciaTijolo(float x, float y, float comprimento, float largura
         auxX = sphereX - (x + compriment/2);
         auxY = sphereY - (y + largur/2);
     }
-    return auxX*auxX+auxY*auxY <= raioAreaImpacto*raioAreaImpacto;
+    return auxX*auxX+auxY*auxY <= 16;
 }
 //funcao para determinar se houve colisao entre a esfera e a barra
 bool colisao::colisaoTijolo(float xTijolo, float yTijolo, float comprimento, float largura,int i)
