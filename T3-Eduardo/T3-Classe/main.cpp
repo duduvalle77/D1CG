@@ -1,4 +1,6 @@
 #include "include/colisao.h"
+#include "glcTexture.h"
+#include "glcWavefrontObject.h"
 
 #define NUM_OBJECTS 2
 #define faces 20
@@ -7,6 +9,22 @@ using namespace std;
 /// Estruturas iniciais para armazenar vertices
 //  Você poderá utilizá-las adicionando novos métodos (de acesso por exemplo) ou usar suas próprias estruturas.
 
+
+char objectFiles[NUM_OBJECTS][50] =
+{
+    "../data/obj/Love.obj",
+    "../data/obj/rock1.obj"
+};
+
+typedef struct
+{
+    //GLMmodel* pmodel = NULL;
+    glcWavefrontObject *pmodel = NULL;
+} object;
+
+object *objectList;
+
+glcWavefrontObject *objectManager = NULL;
 
 /// Globals
 colisao cl = colisao(1);
@@ -27,6 +45,10 @@ bool paused = false; // variavel para determiar se o jogo esta pausado
 bool fullscreen = false; // variavel para determiar se o jogo esta em fullscreen
 bool movimentacao = false; // variavel para determiar se o jogo esta com movimentacao livre na projecao em perpectiva
 bool terminou = false; // variável para determinar o fim do jogo
+bool intro = true;
+
+glcTexture *textureManager;
+int texturaSelecionada = 0;
 
 //variaveis utilizadas para definir a posição dos tijolos
 float x = 1.0, y = 1.0;
@@ -197,7 +219,13 @@ void init(void)
     initLight(width, height);
     cl.fs.construirGrid(cl.fs.seletor);
     colorir(cl.fs.seletor);
-    /*objectManager = new glcWavefrontObject();
+
+    textureManager = new glcTexture();
+    textureManager->SetNumberOfTextures(2);
+    textureManager->CreateTexture("../data/pressStart.png", 0);
+    textureManager->CreateTexture("../data/skybox.png", 1);
+
+    objectManager = new glcWavefrontObject();
     objectManager->SetNumberOfObjects(NUM_OBJECTS);
     for(int i = 0; i < NUM_OBJECTS; i++)
     {
@@ -207,7 +235,8 @@ void init(void)
         objectManager->FacetNormal();
         objectManager->VertexNormals(90.0);
         objectManager->Scale(3.0);
-    }*/
+    }
+
 }
 
 ///Função para desenhar os tijolos, as paredes e a barra de lançamento
@@ -312,7 +341,7 @@ void drawEnviroment(void)
 
     //plano
 
-    setColor(cores[0].x,cores[0].y,cores[0].z);
+    /*setColor(cores[0].x,cores[0].y,cores[0].z);
     glBegin(GL_TRIANGLE_FAN);
 
     glNormal3f(0,0,1);
@@ -320,7 +349,8 @@ void drawEnviroment(void)
     glVertex3f(-10,10,0);
     glVertex3f(-10,-10,0);
     glVertex3f(10,-10,0);
-    glEnd();
+    glEnd();*/
+
     setColor(cores[1].x,cores[1].y,cores[1].z);
 
     //Direita
@@ -482,108 +512,251 @@ void display(void)
 
     //A variavel projection e utilizada para definir se a visão será ortogonal ou em perspectiva, codigo tirado do projection.cpp que esta no material da disciplina
     int ortho = 10;
-    if(!projection)
+    if  (intro)
     {
-        if (width <= height)
-            glOrtho (-ortho, ortho, -ortho*height/width, ortho*height/width, -100.0, 100.0);
-        else
-            glOrtho (-ortho*width/height, ortho*width/height, -ortho, ortho, -100.0, 100.0);
-    }
-    else
-        gluPerspective(60.0, (GLfloat) width/(GLfloat) height, 0.01, 200.0);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glutSetCursor(GLUT_CURSOR_NONE);
+        glOrtho (-ortho, ortho, -ortho*height/width, ortho*height/width, -100.0, 100.0);
+        //glDisable(GL_LIGHTING);
+        textureManager->Bind(texturaSelecionada);
 
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glutSetCursor(GLUT_CURSOR_NONE);
-    //A variavel projection e utilizada para definir posição da camera
-    if(!projection)
-    {
-        GLfloat posicao_luz[] = { 0, 0, 8, 1.0};
-        glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz);
-        gluLookAt (0.0, 0.0, 8, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    }
-    else
-    {
         GLfloat posicao_luz[] = { 0, -10, 14, 1.0};
         glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz);
-        gluLookAt (0.0, -10.0, 14, 0.0, -2.0, 0.0, 0.0, 1.0, 0.0);
+
+        gluLookAt (0.0, 0.0, 8, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+        glPushMatrix();
+        glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0.0,0.0,1.0);
+            glTexCoord2f(0.0, 0.0);
+            glVertex3f(-10.0,-10.0,0);
+
+            glTexCoord2f(1.0, 0.0);
+            glVertex3f(10.0,-10.0,0);
+
+            glTexCoord2f(1.0, 1.0);
+            glVertex3f(10.0,10.0,0);
+
+            glTexCoord2f(0.0, 1.0);
+            glVertex3f(-10.0,10.0,0);
+        glEnd();
+        glPopMatrix();
+        glutSwapBuffers();
     }
-
-    //chama as funções de desenhar tijolos e ambiente, além de desenhar o disparador e a esfera
-    glPushMatrix();
-        glRotatef( rotationY, 0.0, 1.0, 0.0 );
-        glRotatef( rotationX, 1.0, 0.0, 0.0 );
-        setColor(cores[3].x,cores[3].y,cores[3].z);
-        drawBarra();
-        setColor(1,1,0);
-        ///Pedra 1 entra nesse glPushMatrix
-        glPushMatrix();
-            setColor(1,0,0);
-            glTranslatef(cl.objetos[0].x,cl.objetos[0].y,cl.objetos[0].z);
-            if(cl.objCond[0]!=3)
-                glutSolidSphere(cl.objEscala[0],100,100);
-        glPopMatrix();
-        ///Pedra 2 entra nesse glPushMatrix
-        glPushMatrix();
-            setColor(0,0,1);
-            glTranslatef(cl.objetos[1].x,cl.objetos[1].y,cl.objetos[1].z);
-            if(cl.objCond[1]!=3)
-                glutSolidSphere(cl.objEscala[1],100,100);
-        glPopMatrix();
-        ///Esse seria o espaco para os coracoes
-        /*glPushMatrix();
-        glTranslatef(11.0,9.0,2.0);
-        for (int i = 0; i < vida; i++)
+    else
+    {
+        if(!projection)
         {
-            glTranslatef(0.0,-1.5,0.0);
-            objectManager->SelectObject(selected);
-            objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
-            objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
-            objectManager->Unitize();
-            objectManager->Draw();
+            if (width <= height)
+                glOrtho (-ortho, ortho, -ortho*height/width, ortho*height/width, -100.0, 100.0);
+            else
+                glOrtho (-ortho*width/height, ortho*width/height, -ortho, ortho, -100.0, 100.0);
         }
-        glPopMatrix();*/
-        ///Loop para desenhar a fase com cores aleatórias para cada linha do grid
-        for(int i = 0; i < matrizLinha; i++)
-        {
-            setColor(mColor[i][0], mColor[i][1], mColor[i][2]);
-            for(int j = 0; j < matrizColuna; j++)
-            {
-                if(cl.fs.m[i][j].alive) // desenha tijolo apenas se n foi destruido
-                {
-                    drawBrick(cl.fs.m[i][j].vMenor.x, cl.fs.m[i][j].vMenor.y, compriment, largur, altur);
-                }
+        else
+            gluPerspective(60.0, (GLfloat) width/(GLfloat) height, 0.01, 200.0);
 
-            }
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glutSetCursor(GLUT_CURSOR_NONE);
+        //A variavel projection e utilizada para definir posição da camera
+        if(!projection)
+        {
+            GLfloat posicao_luz[] = { 0, 0, 8, 1.0};
+            glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz);
+            gluLookAt (0.0, 0.0, 8, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
         }
-        drawEnviroment();
-        drawLombadas();
+        else
+        {
+            GLfloat posicao_luz[] = { 0, -10, 14, 1.0};
+            glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz);
+            gluLookAt (0.0, -10.0, 14, 0.0, -2.0, 0.0, 0.0, 1.0, 0.0);
+        }
+
+        //chama as funções de desenhar tijolos e ambiente, além de desenhar o disparador e a esfera
         glPushMatrix();
-            setColor(0,1,0);
-            glTranslatef(cl.sphereX,cl.sphereY,0.5);
-            glutSolidSphere(0.5,100,100);
-        if(!cl.launched && !terminou && !cl.gameOver){//verifica se a bola foi lançada para desenhar o disparador
-                glRotatef(direction,0,0,1);
+
+            glRotatef( rotationY, 0.0, 1.0, 0.0 );
+            glRotatef( rotationX, 1.0, 0.0, 0.0 );
+
+            glPushMatrix();
+                texturaSelecionada = 1;
+                textureManager->Bind(texturaSelecionada);
+                setColor(1,1,1);
+                glBegin(GL_QUADS);
+                ///Base
+                glNormal3f(0,0,1);
+                glTexCoord2f(0.5,0.66);
+                glVertex3f(90,90,-90);
+                glTexCoord2f(0.25,0.66);
+                glVertex3f(-90,90,-90);
+                glTexCoord2f(0.25,0.33);
+                glVertex3f(-90,-90,-90);
+                glTexCoord2f(0.5,0.33);
+                glVertex3f(90,-90,-90);
+                glEnd();
+
+                ///Em Cima
+                glBegin(GL_QUADS);
+                glNormal3f(0,-1,0);
+                glTexCoord2f(0.5,0.66);
+                glVertex3f(90,90,-90);
+                glTexCoord2f(0.5,1);
+                glVertex3f(90,90,90);
+                glTexCoord2f(0.25,1);
+                glVertex3f(-90,90,90);
+                glTexCoord2f(0.25,0.66);
+                glVertex3f(-90,90,-90);
+                glEnd();
+
+                ///Direita
+                glBegin(GL_QUADS);
+                glNormal3f(-1,0,0);
+                glTexCoord2f(0.5,0.33);
+                glVertex3f(90,-90,-90);
+                glTexCoord2f(0.75,0.33);
+                glVertex3f(90,-90,90);
+                glTexCoord2f(0.75,0.66);
+                glVertex3f(90,90,90);
+                glTexCoord2f(0.5,0.66);
+                glVertex3f(90,90,-90);
+                glEnd();
+
+
+                ///Esquerda
+                glBegin(GL_QUADS);
+                glNormal3f(1,0,0);
+                glTexCoord2f(0.25,0.66);
+                glVertex3f(-90,90,-90);
+                glTexCoord2f(0,0.66);
+                glVertex3f(-90,90,90);
+                glTexCoord2f(0,0.33);
+                glVertex3f(-90,-90,90);
+                glTexCoord2f(0.25,0.33);
+                glVertex3f(-90,-90,-90);
+                glEnd();
+
+
+                ///Em Baixo
+                glBegin(GL_QUADS);
+                glNormal3f(0,1,0);
+                glTexCoord2f(0.25,0.33);
+                glVertex3f(-90,-88,-90);
+                glTexCoord2f(0.25,0);
+                glVertex3f(-90,-88,90);
+                glTexCoord2f(0.5,0);
+                glVertex3f(90,-88,90);
+                glTexCoord2f(0.5,0.33);
+                glVertex3f(90,-88,-90);
+                glEnd();
+
+
+                ///Teto
+                glBegin(GL_QUADS);
+                glNormal3f(0,0,-1);
+                glTexCoord2f(0.75,0.33);
+                glVertex3f(90,-90,90);
+                glTexCoord2f(1.0,0.33);
+                glVertex3f(-90,-90,90);
+                glTexCoord2f(1.0,0.66);
+                glVertex3f(-90,90,90);
+                glTexCoord2f(0.75,0.66);
+                glVertex3f(90,90,90);
+                glEnd();
+                textureManager->Disable();
+
+            glPopMatrix();
+
+            setColor(cores[3].x,cores[3].y,cores[3].z);
+            drawBarra();
+            setColor(1,1,0);
+            ///Pedra 1 entra nesse glPushMatrix
+            glPushMatrix();
                 setColor(1,0,0);
-                glTranslatef(0,1.75,0);
-                glBegin(GL_TRIANGLE_FAN);
-                    glNormal3f(0,0,1);
-                    glVertex3f(0.5,1.75,0);
-                    glVertex3f(-0.5,1.75,0);
-                    glVertex3f(-0.5,-1.75,0);
-                    glVertex3f(0.5,-1.75,0);
-                glEnd();
-                glTranslatef(0,2.4,0);
-                glBegin(GL_TRIANGLES);
-                    glNormal3f(0,0,1);
-                    glVertex3f(0.75,-0.65,0);
-                    glVertex3f(0,0.65,0);
-                    glVertex3f(-0.75,-0.65,0);
-                glEnd();
-        }
+                glTranslatef(cl.objetos[0].x,cl.objetos[0].y,cl.objetos[0].z);
+                glScalef(cl.objEscala[0],cl.objEscala[0],cl.objEscala[0]);
+                //if(cl.objCond[0]!=3)
+                //    glutSolidSphere(cl.objEscala[0],100,100);
+                if(cl.objCond[0]!=3)
+                {
+                    objectManager->SelectObject(1);
+                    objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
+                    objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
+
+                    objectManager->Draw();
+                }
+            glPopMatrix();
+            ///Pedra 2 entra nesse glPushMatrix
+            glPushMatrix();
+                setColor(0,0,1);
+                glTranslatef(cl.objetos[1].x,cl.objetos[1].y,cl.objetos[1].z);
+                //if(cl.objCond[1]!=3)
+                //    glutSolidSphere(cl.objEscala[1],100,100);
+                glScalef(cl.objEscala[1],cl.objEscala[1],cl.objEscala[1]);
+                if(cl.objCond[1]!=3)
+                {
+                    objectManager->SelectObject(1);
+                    objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
+                    objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
+                    //objectManager->Scale(10);
+                    objectManager->Draw();
+                }
+            glPopMatrix();
+            ///Esse seria o espaco para os coracoes
+            /*glPushMatrix();
+            glTranslatef(11.0,9.0,2.0);
+            for (int i = 0; i < vida; i++)
+            {
+                glTranslatef(0.0,-1.5,0.0);
+                objectManager->SelectObject(selected);
+                objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
+                objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
+                objectManager->Unitize();
+                objectManager->Draw();
+            }
+            glPopMatrix();*/
+            ///Loop para desenhar a fase com cores aleatórias para cada linha do grid
+            for(int i = 0; i < matrizLinha; i++)
+            {
+                setColor(mColor[i][0], mColor[i][1], mColor[i][2]);
+                for(int j = 0; j < matrizColuna; j++)
+                {
+                    if(cl.fs.m[i][j].alive) // desenha tijolo apenas se n foi destruido
+                    {
+                        drawBrick(cl.fs.m[i][j].vMenor.x, cl.fs.m[i][j].vMenor.y, compriment, largur, altur);
+                    }
+
+                }
+            }
+            drawEnviroment();
+            drawLombadas();
+            glPushMatrix();
+                setColor(0,1,0);
+                glTranslatef(cl.sphereX,cl.sphereY,0.5);
+                glutSolidSphere(0.5,100,100);
+            if(!cl.launched && !terminou && !cl.gameOver){//verifica se a bola foi lançada para desenhar o disparador
+                    glRotatef(direction,0,0,1);
+                    setColor(1,0,0);
+                    glTranslatef(0,1.75,0);
+                    glBegin(GL_TRIANGLE_FAN);
+                        glNormal3f(0,0,1);
+                        glVertex3f(0.5,1.75,0);
+                        glVertex3f(-0.5,1.75,0);
+                        glVertex3f(-0.5,-1.75,0);
+                        glVertex3f(0.5,-1.75,0);
+                    glEnd();
+                    glTranslatef(0,2.4,0);
+                    glBegin(GL_TRIANGLES);
+                        glNormal3f(0,0,1);
+                        glVertex3f(0.75,-0.65,0);
+                        glVertex3f(0,0.65,0);
+                        glVertex3f(-0.75,-0.65,0);
+                    glEnd();
+            }
+            glPopMatrix();
         glPopMatrix();
-    glPopMatrix();
+}
 
     //if(drawboundingbox) objectManager->DrawBoundingBox();
     //if(drawaxes)        drawAxes();
@@ -836,7 +1009,7 @@ void motionClick(int x, int y )
 // Mouse callback
 void mouse(int button, int state, int x, int y)
 {
-    if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !cl.launched && !paused && !terminou && !cl.gameOver)
+    if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !cl.launched && !paused && !terminou && !cl.gameOver && !intro)
     {
         cl.launched = true;
     }
@@ -854,21 +1027,26 @@ void mouse(int button, int state, int x, int y)
             direction -=1;
         }
     }
+    if ( button == GLUT_LEFT_BUTTON && intro)
+    {
+        intro = false;
+        cout << "----" << endl;
+    }
 }
 void f12 (int key, int x, int y)
 {
     if(key == GLUT_KEY_F12)
     {
         fullscreen = !fullscreen;
-    }
-    if(fullscreen)
-    {
-        glutFullScreen();
-    }
-    else
-    {
-        glutReshapeWindow(1000,600);
-        glutPositionWindow(100,100);
+        if(fullscreen)
+        {
+            glutFullScreen();
+        }
+        else
+        {
+            glutReshapeWindow(1000,600);
+            glutPositionWindow(100,100);
+        }
     }
 }
 /// Main
