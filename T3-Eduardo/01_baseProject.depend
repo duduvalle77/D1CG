@@ -1,0 +1,53 @@
+# depslib dependency file v1.0
+1535591431 source:/home/getcomp06/Downloads/CG/shared/glcTexture.cpp
+	<string>
+	<stdio.h>
+	<malloc.h>
+	"GL/glut.h"
+	"png.h"
+	"glcTexture.h"
+
+1535591433 /home/getcomp06/Downloads/CG/shared/glcTexture.h
+	<string>
+
+1535591435 source:/home/getcomp06/Downloads/CG/shared/glcWavefrontObject.cpp
+	"glcWavefrontObject.h"
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<assert.h>
+
+1535591437 /home/getcomp06/Downloads/CG/shared/glcWavefrontObject.h
+	<math.h>
+	<stdio.h>
+	<GL/gl.h>
+
+1574965295 source:/home/getcomp06/Downloads/CG/src/D1CG/T3-Eduardo/T3-Classe/colisao.cpp
+	"include/colisao.h"
+
+1574965295 /home/getcomp06/Downloads/CG/src/D1CG/T3-Eduardo/T3-Classe/include/colisao.h
+	<GL/glut.h>
+	<stdlib.h>
+	<stdio.h>
+	<ctype.h>
+	<math.h>
+	<ctime>
+	<vector>
+	<algorithm>
+	<cmath>
+	"faseSelector.h"
+	"glcWavefrontObject.h"
+	<iostream>
+
+1574993142 /home/getcomp06/Downloads/CG/src/D1CG/T3-Eduardo/T3-Classe/include/faseSelector.h
+	<iostream>
+
+1574993163 source:/home/getcomp06/Downloads/CG/src/D1CG/T3-Eduardo/T3-Classe/faseSelector.cpp
+	"include/faseSelector.h"
+
+1574993206 source:/home/getcomp06/Downloads/CG/src/D1CG/T3-Eduardo/T3-Classe/main.cpp
+	"include/colisao.h"
+	"glcTexture.h"
+	"glcWavefrontObject.h"
+

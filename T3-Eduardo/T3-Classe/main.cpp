@@ -13,7 +13,7 @@ using namespace std;
 char objectFiles[NUM_OBJECTS][50] =
 {
     "../data/obj/Love.obj",
-    "../data/obj/rock1.obj"
+    "../data/texturedObj/2K.obj"
 };
 
 typedef struct
@@ -57,7 +57,7 @@ float mColor[matrizLinha][3];//matriz para corolir os tijolos
 float PI = 3.1415927;
 vertice v[faces+1];
 vertice normal[faces+1];
-
+vertice tex[faces+1];
 
 vertice v1[faces+1];
 vertice normal1[faces+1];
@@ -67,7 +67,7 @@ vertice v2[faces+1];
 vertice normal2[faces+1];
 
 
-float chanceAparicao = 1;
+float chanceAparicao = 0.5;
 float velObjeto = 5;
 vertice cores[4] = {{0,0,0},{0.5,0.5,0.5},{0,0,1},{1,0,0}};
 /// Functions
@@ -81,16 +81,16 @@ void criaCirculo()
     cl.yRebatedor = cl.barraY+cl.barraH-raio;
     for(int i = 0; i < faces+1; i++)
     {
-
         v[i].x = raio * cos(g * PI / 180);
         v[i].y = raio * sin(g * PI / 180)+cl.yRebatedor;
         v[i].z = 0;
         normal[i].x = 1 * cos(g * PI / 180);
         normal[i].y = 1 * sin(g * PI / 180);
         normal[i].z = 0;
+        tex[i].x = (v[i].x+3.0)/6.0;
+        tex[i].y = v[i].y + 9.0;
         g += k;
     }
-
     raio = (0.5*0.5 + 4*4)/(2*0.5);
     angulo = (2*asin(4/raio))*180/PI;
     g = 360-(angulo/2);
@@ -178,8 +178,8 @@ void colorir(int i)
         cores[2].y = 0;
         cores[2].z = 0.8;
         cores[3].x = 1;
-        cores[3].y = 0;
-        cores[3].z = 0;
+        cores[3].y = 1;
+        cores[3].z = 1;
         break;
     case 1:
         cores[0].x = 0.25;
@@ -191,9 +191,9 @@ void colorir(int i)
         cores[2].x = 1;
         cores[2].y = 0;
         cores[2].z = 0;
-        cores[3].x = 0;
+        cores[3].x = 1;
         cores[3].y = 0;
-        cores[3].z = 1;
+        cores[3].z = 0;
         break;
     case 2:
         cores[0].x = 0.5;
@@ -205,7 +205,7 @@ void colorir(int i)
         cores[2].x = 0;
         cores[2].y = 1;
         cores[2].z = 0;
-        cores[3].x = 1;
+        cores[3].x = 0;
         cores[3].y = 0;
         cores[3].z = 1;
         break;
@@ -221,9 +221,15 @@ void init(void)
     colorir(cl.fs.seletor);
 
     textureManager = new glcTexture();
-    textureManager->SetNumberOfTextures(2);
+    textureManager->SetNumberOfTextures(7);
     textureManager->CreateTexture("../data/pressStart.png", 0);
     textureManager->CreateTexture("../data/skybox.png", 1);
+    textureManager->CreateTexture("../data/Diffuse_2K.png", 2);
+    textureManager->CreateTexture("../data/textura.png", 3);
+    textureManager->CreateTexture("../data/paredeCurva.png", 4);
+    textureManager->CreateTexture("../data/topo.png", 5);
+    textureManager->CreateTexture("../data/arredon.png", 6);
+
 
     objectManager = new glcWavefrontObject();
     objectManager->SetNumberOfObjects(NUM_OBJECTS);
@@ -335,13 +341,213 @@ void drawBrick(float x, float y, float comprimento, float largura, float altura)
     glEnd();
 }
 
+void drawBrickTex(float x, float y, float comprimento, float largura, float altura,int cima)
+{
+    textureManager->Bind(3);
+    vertice vBase[4] = {{x,y,0},
+        {x+comprimento,y,0},
+        {x+comprimento,y+largura,0},
+        {x,y+largura,0}
+    };
+
+    vertice vTopo[4] = {{x,y,altura},
+        {x+comprimento,y,altura},
+        {x+comprimento,y+largura,altura},
+        {x,y+largura,altura}
+    };
+
+    vertice frente[4] = {vBase[0],
+                         vBase[1],
+                         vTopo[1],
+                         vTopo[0]
+                        };
+
+    vertice direito[4] = {vBase[1],
+                          vBase[2],
+                          vTopo[2],
+                          vTopo[1]
+                         };
+
+    vertice costas[4] = {vBase[2],
+                         vBase[3],
+                         vTopo[3],
+                         vTopo[2]
+                        };
+
+    vertice esquerdo[4] = {vBase[3],
+                           vBase[0],
+                           vTopo[0],
+                           vTopo[3]
+                          };
+
+    if(cima)
+    {
+    ///Base
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
+    glTexCoord2f(0.0, 0.025);
+    glVertex3f(vBase[3].x, vBase[3].y, vBase[3].z);
+    glTexCoord2f(1.0, 0.025);
+    glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
+    glEnd();
+
+    ///Topo
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
+    glTexCoord2f(1.0, 0.025);
+    glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
+    glTexCoord2f(0.0, 0.025);
+    glVertex3f(vTopo[3].x, vTopo[3].y, vTopo[3].z);
+    glEnd();
+
+    ///Frente
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,-1,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(frente[0].x, frente[0].y, frente[0].z);
+    glTexCoord2f(1, 0.0);
+    glVertex3f(frente[1].x, frente[1].y, frente[1].z);
+    glTexCoord2f(1, 0.25);
+    glVertex3f(frente[2].x, frente[2].y, frente[2].z);
+    glTexCoord2f(0.0, 0.25);
+    glVertex3f(frente[3].x, frente[3].y, frente[3].z);
+    glEnd();
+
+    ///Direita
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(1,0,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(direito[0].x, direito[0].y, direito[0].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(direito[1].x, direito[1].y, direito[1].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(direito[2].x, direito[2].y, direito[2].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(direito[3].x, direito[3].y, direito[3].z);
+    glEnd();
+
+    ///Costas
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,1,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(costas[0].x, costas[0].y, costas[0].z);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(costas[1].x, costas[1].y, costas[1].z);
+    glTexCoord2f(1.0, 0.025);
+    glVertex3f(costas[2].x, costas[2].y, costas[2].z);
+    glTexCoord2f(0.0, 0.025);
+    glVertex3f(costas[3].x, costas[3].y, costas[3].z);
+    glEnd();
+
+    ///Esquerda
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(-1,0,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(esquerdo[3].x, esquerdo[3].y, esquerdo[3].z);
+    glEnd();
+    }
+    else
+    {
+    ///Base
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(vBase[0].x, vBase[0].y, vBase[0].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(vBase[3].x, vBase[3].y, vBase[3].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(vBase[2].x, vBase[2].y, vBase[2].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(vBase[1].x, vBase[1].y, vBase[1].z);
+    glEnd();
+
+    ///Topo
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(vTopo[0].x, vTopo[0].y, vTopo[0].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(vTopo[1].x, vTopo[1].y, vTopo[1].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(vTopo[2].x, vTopo[2].y, vTopo[2].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(vTopo[3].x, vTopo[3].y, vTopo[3].z);
+    glEnd();
+
+    ///Frente
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,-1,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(frente[0].x, frente[0].y, frente[0].z);
+    glTexCoord2f(1, 0.0);
+    glVertex3f(frente[1].x, frente[1].y, frente[1].z);
+    glTexCoord2f(1, 1);
+    glVertex3f(frente[2].x, frente[2].y, frente[2].z);
+    glTexCoord2f(0.0, 1);
+    glVertex3f(frente[3].x, frente[3].y, frente[3].z);
+    glEnd();
+
+    ///Direita
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(1,0,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(direito[0].x, direito[0].y, direito[0].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(direito[1].x, direito[1].y, direito[1].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(direito[2].x, direito[2].y, direito[2].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(direito[3].x, direito[3].y, direito[3].z);
+    glEnd();
+
+    ///Costas
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0,1,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(costas[0].x, costas[0].y, costas[0].z);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(costas[1].x, costas[1].y, costas[1].z);
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(costas[2].x, costas[2].y, costas[2].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(costas[3].x, costas[3].y, costas[3].z);
+    glEnd();
+
+    ///Esquerda
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(-1,0,0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(esquerdo[0].x, esquerdo[0].y, esquerdo[0].z);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(esquerdo[1].x, esquerdo[1].y, esquerdo[1].z);
+    glTexCoord2f(0.025, 1.0);
+    glVertex3f(esquerdo[2].x, esquerdo[2].y, esquerdo[2].z);
+    glTexCoord2f(0.025, 0.0);
+    glVertex3f(esquerdo[3].x, esquerdo[3].y, esquerdo[3].z);
+    glEnd();
+    }
+    textureManager->Disable();
+}
+
 // Função para desenhar as paredes e a superficie
 void drawEnviroment(void)
 {
-
     //plano
-
-    /*setColor(cores[0].x,cores[0].y,cores[0].z);
+    setColor(cores[0].x,cores[0].y,cores[0].z);
     glBegin(GL_TRIANGLE_FAN);
 
     glNormal3f(0,0,1);
@@ -349,16 +555,16 @@ void drawEnviroment(void)
     glVertex3f(-10,10,0);
     glVertex3f(-10,-10,0);
     glVertex3f(10,-10,0);
-    glEnd();*/
+    glEnd();
 
     setColor(cores[1].x,cores[1].y,cores[1].z);
 
     //Direita
-    drawBrick(10,-10,0.5,20,1);
+    drawBrickTex(10,-10,0.5,20,1,0);
     //Esquerda
-    drawBrick(-10.5,-10,0.5,20,1);
+    drawBrickTex(-10.5,-10,0.5,20,1,0);
     //Cima
-    drawBrick(-10,9.5,20,0.5,1);
+    drawBrickTex(-10,9.5,20,0.5,1,1);
     //portas
     setColor(cores[2].x,cores[2].y,cores[2].z);
     drawBrick(-7.5,9.5,5,0.5,1.5);
@@ -372,39 +578,52 @@ void drawLombadas()
     float altura = 1;
     ///Lombada Esquerda
     ///Lateral
+    textureManager->Bind(4);
+    float k = 5.0/float(faces);
+    float tx = 0;
     for(int i = 0; i < faces; i++)
     {
         glBegin(GL_TRIANGLE_FAN);
             glNormal3f( normal1[i].x, normal1[i].y,-normal1[i].z);
+            glTexCoord2f(tx, 0);
             glVertex3f(v1[i].x, v1[i].y, 0);
             glNormal3f( normal1[i+1].x, normal1[i+1].y,-normal1[i].z);
+            glTexCoord2f(tx+k, 0);
             glVertex3f(v1[i+1].x, v1[i+1].y, 0);
             glNormal3f( normal1[i+1].x, normal1[i+1].y,normal1[i].z);
+            glTexCoord2f(tx+k, 1.0);
             glVertex3f(v1[i+1].x, v1[i+1].y,  altura);
             glNormal3f( normal1[i].x, normal1[i].y,normal1[i].z);
+            glTexCoord2f(tx, 1.0);
             glVertex3f(v1[i].x, v1[i].y,  altura);
         glEnd();
+        tx += k;
     }
-
+    textureManager->Bind(3);
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,1);
+    glTexCoord2f(0.0, 1.0);
     glVertex3f(v1[faces].x, v1[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
+        glTexCoord2f((v1[i].x+10)/8.0, (v1[i].y+4)/8.0);
         glVertex3f(v1[i].x, v1[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,-1);
+    glTexCoord2f(0.0, 0.0);
     glVertex3f(v1[0].x, v1[0].y, 0);
     for(int i = faces; i > 0 ; i--)
     {
+        glTexCoord2f((v1[i].x+10)/8.0, (v1[i].y+4)/8.0);
         glVertex3f(v1[i].x, v1[i].y, 0);
     }
     glEnd();
     ///Frente
+    textureManager->Disable();
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,-1,0);
     glVertex3f(v1[faces].x, v1[faces].y, 0);
@@ -415,38 +634,50 @@ void drawLombadas()
 
     ///Lombada Direita
     ///Lateral
+    textureManager->Bind(4);
+    tx = 0;
     for(int i = 0; i < faces; i++)
     {
         glBegin(GL_TRIANGLE_FAN);
             glNormal3f( normal2[i].x, normal2[i].y,-normal2[i].z);
+            glTexCoord2f(tx, 0);
             glVertex3f(v2[i].x, v2[i].y, 0);
             glNormal3f( normal2[i+1].x, normal2[i+1].y,-normal2[i].z);
+            glTexCoord2f(tx+k, 0);
             glVertex3f(v2[i+1].x, v2[i+1].y, 0);
             glNormal3f( normal2[i+1].x, normal2[i+1].y,normal2[i].z);
+            glTexCoord2f(tx+k, 1);
             glVertex3f(v2[i+1].x, v2[i+1].y,  altura);
             glNormal3f( normal2[i].x, normal2[i].y,normal2[i].z);
+            glTexCoord2f(tx, 1);
             glVertex3f(v2[i].x, v2[i].y,  altura);
         glEnd();
+        tx += k;
     }
-
+    textureManager->Bind(3);
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,1);
+    glTexCoord2f(0.0, 0.0);
     glVertex3f(v2[faces].x, v2[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
+        glTexCoord2f((v2[i].x-10)/8.0, (v2[i].y+4)/8.0);
         glVertex3f(v2[i].x, v2[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,-1);
+    glTexCoord2f(0.0, 1.0);
     glVertex3f(v2[0].x, v2[0].y, 0);
     for(int i = faces; i > 0; i--)
     {
+        glTexCoord2f((v2[i].x-10)/8.0, (v2[i].y+4)/8.0);
         glVertex3f(v2[i].x, v2[i].y, 0);
     }
     glEnd();
+    textureManager->Disable();
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,-1,0);
@@ -455,52 +686,71 @@ void drawLombadas()
     glVertex3f(v2[0].x, v2[0].y, altura);
     glVertex3f(v2[faces].x, v2[faces].y, altura);
     glEnd();
+
 }
 
 void drawBarra()
 {
+    textureManager->Bind(6);
     float altura = 1;
     ///Lateral
+    float k = 4.0/float(faces);
+    float tx = 0;
     for(int i = 0; i < faces; i++)
     {
         glBegin(GL_TRIANGLE_FAN);
             glNormal3f( normal[i].x, normal[i].y,-normal[i].z);
+            glTexCoord2f(tx, 0);
             glVertex3f(v[i].x+cl.xRebatedor, v[i].y, 0);
             glNormal3f( normal[i+1].x, normal[i+1].y,-normal[i].z);
+            glTexCoord2f(tx+k, 0);
             glVertex3f(v[i+1].x+cl.xRebatedor, v[i+1].y, 0);
             glNormal3f( normal[i+1].x, normal[i+1].y,normal[i].z);
+            glTexCoord2f(tx+k, 1);
             glVertex3f(v[i+1].x+cl.xRebatedor, v[i+1].y,  altura);
             glNormal3f( normal[i].x, normal[i].y,normal[i].z);
+            glTexCoord2f(tx, 1);
             glVertex3f(v[i].x+cl.xRebatedor, v[i].y,  altura);
         glEnd();
+        tx += k;
     }
-
+    textureManager->Bind(5);
     ///Topo
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,1);
+    glTexCoord2f(tex[faces].x, tex[faces].y);
     glVertex3f(v[faces].x+cl.xRebatedor, v[faces].y, altura);
     for(int i = 0; i < faces; i++)
     {
+        glTexCoord2f(tex[i].x,tex[i].y);
         glVertex3f(v[i].x+cl.xRebatedor, v[i].y, altura);
     }
     glEnd();
     ///Base
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,0,-1);
+    glTexCoord2f(tex[0].x,tex[0].y);
     glVertex3f(v[0].x+cl.xRebatedor, v[0].y, 0);
     for(int i = faces; i > 0; i--)
     {
+        glTexCoord2f(tex[i].x,tex[i].y);
         glVertex3f(v[i].x+cl.xRebatedor, v[i].y, 0);
     }
     glEnd();
+    textureManager->Bind(6);
     ///Frente
     glBegin(GL_TRIANGLE_FAN);
     glNormal3f(0,-1,0);
+    glTexCoord2f(0, 0);
     glVertex3f(v[faces].x+cl.xRebatedor, v[faces].y, 0);
+    glTexCoord2f(2, 0);
     glVertex3f(v[0].x+cl.xRebatedor, v[0].y, 0);
+    glTexCoord2f(2, 1);
     glVertex3f(v[0].x+cl.xRebatedor, v[0].y, altura);
+    glTexCoord2f(0, 1);
     glVertex3f(v[faces].x+cl.xRebatedor, v[faces].y, altura);
     glEnd();
+    textureManager->Disable();
 }
 
 void display(void)
@@ -665,7 +915,6 @@ void display(void)
                 glVertex3f(90,90,90);
                 glEnd();
                 textureManager->Disable();
-
             glPopMatrix();
 
             setColor(cores[3].x,cores[3].y,cores[3].z);
@@ -673,7 +922,8 @@ void display(void)
             setColor(1,1,0);
             ///Pedra 1 entra nesse glPushMatrix
             glPushMatrix();
-                setColor(1,0,0);
+                textureManager->Bind(2);
+                setColor(1,1,1);
                 glTranslatef(cl.objetos[0].x,cl.objetos[0].y,cl.objetos[0].z);
                 glScalef(cl.objEscala[0],cl.objEscala[0],cl.objEscala[0]);
                 //if(cl.objCond[0]!=3)
@@ -682,14 +932,14 @@ void display(void)
                 {
                     objectManager->SelectObject(1);
                     objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
-                    objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
+                    objectManager->SetRenderMode(USE_TEXTURE_AND_MATERIAL);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
 
                     objectManager->Draw();
                 }
             glPopMatrix();
             ///Pedra 2 entra nesse glPushMatrix
             glPushMatrix();
-                setColor(0,0,1);
+                setColor(1,1,1);
                 glTranslatef(cl.objetos[1].x,cl.objetos[1].y,cl.objetos[1].z);
                 //if(cl.objCond[1]!=3)
                 //    glutSolidSphere(cl.objEscala[1],100,100);
@@ -698,24 +948,25 @@ void display(void)
                 {
                     objectManager->SelectObject(1);
                     objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
-                    objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
+                    objectManager->SetRenderMode(USE_TEXTURE_AND_MATERIAL);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
                     //objectManager->Scale(10);
                     objectManager->Draw();
                 }
+                textureManager->Disable();
             glPopMatrix();
             ///Esse seria o espaco para os coracoes
-            /*glPushMatrix();
+            glPushMatrix();
             glTranslatef(11.0,9.0,2.0);
-            for (int i = 0; i < vida; i++)
+            for (int i = 0; i < cl.vida; i++)
             {
                 glTranslatef(0.0,-1.5,0.0);
-                objectManager->SelectObject(selected);
+                objectManager->SelectObject(0);
                 objectManager->SetShadingMode(selectedShading); // Possible values: FLAT_SHADING e SMOOTH_SHADING
                 objectManager->SetRenderMode(selectedRender);     // Possible values: USE_COLOR, USE_MATERIAL, USE_TEXTURE (not available in this example)
                 objectManager->Unitize();
                 objectManager->Draw();
             }
-            glPopMatrix();*/
+            glPopMatrix();
             ///Loop para desenhar a fase com cores aleatórias para cada linha do grid
             for(int i = 0; i < matrizLinha; i++)
             {
@@ -776,6 +1027,8 @@ void faseTerminou() //funcao para determinar se a fase terminou
         }
     }
     cl.launched = false;
+    cl.objCond[0] = 3;
+    cl.objCond[1] = 3;
     cl.fs.fase();
     if (cl.fs.seletor == 3)
     {
@@ -867,20 +1120,29 @@ void idle ()
                     {
                         cl.objetos[i].x = -5;
                     }
-                    chanceAparicao = 1;
+                    aux = rand()%2;
+                    if(aux)
+                    {
+                        cl.dirX[i] = -1;
+                    }
+                    else
+                    {
+                        cl.dirX[i] = 1;
+                    }
+                    chanceAparicao = 0.5;
                     cl.objCond[i] = 0;
                     cl.objEscala[i] = 0.5;
                     aux = rand()%100;
-                    cl.dirX[i] = aux;
+                    cl.dirX[i] *= aux;
                     aux = rand()%100;
-                    cl.dirY[i] = aux;
+                    cl.dirY[i] = -aux;
                     float len_v = sqrt(cl.dirX[i]*cl.dirX[i] + cl.dirY[i]*cl.dirY[i]);
                     cl.dirX[i] /= len_v;
                     cl.dirY[i] /= len_v;
                 }
                 else
                 {
-                    chanceAparicao +=0.1;
+                    chanceAparicao +=0.005;
                 }
                 break;
             }
@@ -901,13 +1163,6 @@ void reshape (int w, int h)
 
 void keyboard (unsigned char key, int x, int y)
 {
-    /*if(isdigit(key))
-    {
-        int val = atoi((const char *) &key);
-        if(val > 0 && val <= NUM_OBJECTS )
-            selected = val-1;
-    }*/
-
     switch (tolower(key))
     {
     case 27:

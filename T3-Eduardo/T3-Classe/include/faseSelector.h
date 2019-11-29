@@ -1,8 +1,8 @@
 #ifndef FASESELECTOR_H
 #define FASESELECTOR_H
 #include <iostream>
-#define matrizLinha 3
-#define matrizColuna 3
+#define matrizLinha 8
+#define matrizColuna 8
 #define largur 0.5
 #define compriment 2
 #define altur 1
